@@ -23,5 +23,6 @@ Parameter|Type|Description
 ------------|------------|----
 window|LONGINT|windowRef or ``0``
 method|TEXT|callback method(``$1:text;$2:text``)
-context|TEXT|any string (``$2`` passed to ``method``
+context|TEXT|any string (``$2`` passed to ``method``)
+
 
