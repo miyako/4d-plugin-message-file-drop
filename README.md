@@ -23,9 +23,9 @@ window|LONGINT|windowRef or ``0``
 method|TEXT|callback method(``$1:text;$2:text``)
 context|TEXT|any string (``$2`` passed to ``method``)
 
-Configures the specified window to implement a custom "OLE drag and drop" feature, over-riding standard form events. 
+Configures the specified window to implement a custom [OLE drag and drop](https://msdn.microsoft.com/en-us/library/96826a87.aspx) feature, over-riding standard form events. 
 
-**Note**: You can disable the custom "OLE drag and drop" feature by passing ``0`` to the command. However, it is not possible to restore standard form events for that window. 
+**Note**: You can disable the custom "OLE drag and drop" feature by passing ``0`` to the command. However, it is not possible to restore standard drop events (from external source) for that window. 
 
 When an email is dropped directly from Outlook, a VBA script is executed (``csript.exe``) which asks Outlook to export the selected messages to a temporary folder in ``.mht`` format. 
 
