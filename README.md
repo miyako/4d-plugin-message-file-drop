@@ -35,11 +35,11 @@ The plugin is monitoring the temporary folder in a background thread. The specif
 
 When Outlook exports an email in  ``.mht`` format, several file system events are generated:
 
-1. add "name.mh_"
+1. create "name.mh_"
 2. modify "name.mh_"
 3. rename from "name.mh_"
 4. rename to "name.mht" 
-5. add, "~$name.mht"
+5. create "~$name.mht"
 6. modify "~$name.mh_"
 7. remove "~$name.mh_"
 
