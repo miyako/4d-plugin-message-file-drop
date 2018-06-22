@@ -35,6 +35,8 @@ The plugin is monitoring the temporary folder in a background thread. The specif
 
 **Do not abort the callback method**. If you abort the execution context, the process will keep running but the method will not longer be called from the plugin until you reopen the structure file.
 
+---
+
 #### Technical Details
 
 When Outlook exports an email in  ``.mht`` format, several file system events are generated:
