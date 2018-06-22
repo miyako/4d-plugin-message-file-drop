@@ -40,8 +40,8 @@ When Outlook exports an email in  ``.mht`` format, several file system events ar
 3. rename from "name.mh_"
 4. rename to "name.mht" 
 5. create "~$name.mht"
-6. modify "~$name.mh_"
-7. remove "~$name.mh_"
+6. modify "~$name.mht"
+7. remove "~$name.mht"
 
 In addition, the script creates a new subfolder for each drop event.
 
