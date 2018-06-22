@@ -48,3 +48,5 @@ In addition, the script creates a new subfolder for each drop event.
 The callback is called when the event is "rename to", not a folder, has the  extension "mht" and does not have the temporary file prefix (``~$``).
 
 The callback method is also executed for standard file drop events. No name checks are performed in this instance. Multiple items call multiple events. However, when a folder with contents is dropped, on the path of the folder (not its sub contents) are reported.
+
+**Do not abort the callback method**. If you abort the execution context, the process will keep running but the method will not longer be called from the plugin until you reopen the structure file.
