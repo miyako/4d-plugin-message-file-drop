@@ -7,6 +7,8 @@ Accept drag and drop of messages from Microsoft Outlook
 |:------:|:-----:|:---------:|:---------:|
 |||<img src="https://cloud.githubusercontent.com/assets/1725068/22371562/1b091f0a-e4db-11e6-8458-8653954a7cce.png" width="24" height="24" />|<img src="https://cloud.githubusercontent.com/assets/1725068/22371562/1b091f0a-e4db-11e6-8458-8653954a7cce.png" width="24" height="24" />|
 
+**A similar solution for Mac is available**: [apple-file-promises](https://github.com/miyako/4d-plugin-apple-file-promises)
+
 ### Version
 
 <img src="https://cloud.githubusercontent.com/assets/1725068/18940649/21945000-8645-11e6-86ed-4a0f800e5a73.png" width="32" height="32" /> <img src="https://cloud.githubusercontent.com/assets/1725068/18940648/2192ddba-8645-11e6-864d-6d5692d55717.png" width="32" height="32" /> <img src="https://user-images.githubusercontent.com/1725068/41266195-ddf767b2-6e30-11e8-9d6b-2adf6a9f57a5.png" width="32" height="32" />
@@ -31,6 +33,10 @@ When an email is dropped directly from Outlook, a VBA script is executed (``csri
 
 The plugin is monitoring the temporary folder in a background thread. The specified callback method is executed when an ``.mht`` file is created.
 
+**Do not abort the callback method**. If you abort the execution context, the process will keep running but the method will not longer be called from the plugin until you reopen the structure file.
+
+---
+
 #### Technical Details
 
 When Outlook exports an email in  ``.mht`` format, several file system events are generated:
@@ -48,5 +54,3 @@ In addition, the script creates a new subfolder for each drop event.
 The callback is called when the event is "rename to", not a folder, has the  extension "mht" and does not have the temporary file prefix (``~$``).
 
 The callback method is also executed for standard file drop events. No name checks are performed in this instance. Multiple items call multiple events. However, when a folder with contents is dropped, on the path of the folder (not its sub contents) are reported.
-
-**Do not abort the callback method**. If you abort the execution context, the process will keep running but the method will not longer be called from the plugin until you reopen the structure file.
