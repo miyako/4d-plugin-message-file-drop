@@ -11,6 +11,9 @@
 #include "4DPluginAPI.h"
 #include "4DPlugin.h"
 
+std::mutex globalMutex;
+std::mutex globalMutex0;
+
 namespace MFD
 {
 	const process_name_t MONITOR_PROCESS_NAME = (PA_Unichar *)L"$MFD";
@@ -26,6 +29,7 @@ namespace MFD
 	bool PROCESS_SHOULD_RESUME = false;
 }
 
+#if VERSIONWIN
 void generateUuid(std::wstring &uuidstr)
 {
 	RPC_WSTR str;
@@ -45,6 +49,7 @@ void generateUuid(std::wstring &uuidstr)
 		}
 	}
 }
+#endif
 
 void PluginMain(PA_long32 selector, PA_PluginParameters params)
 {
@@ -106,6 +111,7 @@ void OnCloseProcess()
 	}
 }
 
+#if VERSIONWIN
 unsigned __stdcall doIt(void *p)
 {
 	Params *params = (Params *)p;
@@ -201,18 +207,22 @@ unsigned __stdcall doIt(void *p)
 	_endthreadex(0);
 	return 0;
 }
+#endif
 
 void listenerLoop()
 {
+#if VERSIONWIN
 	std::vector<HANDLE>::iterator it;
-	std::vector<CUTF16String>watch_path_handle_paths;
 	std::vector<HANDLE>watch_path_handles;
-	
+#endif
+
+	std::vector<CUTF16String>watch_path_handle_paths;
+
 	if (1)
 	{
-		std::mutex m;
-		std::lock_guard<std::mutex> lock(m);
+		std::lock_guard<std::mutex> lock(globalMutex);
 		
+#if VERSIONWIN
 		MFD::MONITOR_PROCESS_SHOULD_TERMINATE = false;
 		for (UINT i = 0; i < MFD::WATCH_PATHS.getSize(); ++i)
 		{
@@ -232,12 +242,18 @@ void listenerLoop()
 				watch_path_handle_paths.push_back(path);
 			}
 		}
+#endif
 	}
 	
+#if VERSIONWIN
 	std::vector<HANDLE>handles;
 	std::vector<HANDLE>signals;
+#endif
+	
 	std::vector<CUTF16String>antisignalnames;
 	std::vector<CUTF16String>folderpaths;
+	
+#if VERSIONWIN
 	std::vector<Params>params(watch_path_handles.size());
 	
 	static const __int64 SECS_BETWEEN_1601_AND_1970_EPOCHS = 116444736000000000LL;
@@ -310,8 +326,8 @@ void listenerLoop()
 					/* process (queued) file drop events */
 					if (1)
 					{
-						std::mutex m;
-						std::lock_guard<std::mutex> lock(m);
+						std::lock_guard<std::mutex> lock(globalMutex0);/* =>listenerLoopExecuteMethod */
+						
 						if (MFD::CALLBACK_EVENT_PATHS.size())
 						{
 							listenerLoopExecuteMethod();
@@ -439,8 +455,7 @@ void listenerLoop()
 														{
 															should_execute_method = true;
 
-															std::mutex m;
-															std::lock_guard<std::mutex> lock(m);
+															std::lock_guard<std::mutex> lock(globalMutex);
 
 															MFD::CALLBACK_EVENT_PATHS.push_back(event_path);
 														}
@@ -519,11 +534,11 @@ void listenerLoop()
 			CloseHandle(h);/* this will end the thread via bytesReturned == 0 */
 		}
 	}
+#endif
 	
 	if(1)
 	{
-		std::mutex m;
-		std::lock_guard<std::mutex> lock(m);
+		std::lock_guard<std::mutex> lock(globalMutex);
 
 		MFD::CALLBACK_EVENT_PATHS.clear();
 		MFD::MONITOR_PROCESS_ID = 0;
@@ -534,10 +549,8 @@ void listenerLoop()
 
 void listenerLoopStart()
 {
-	std::mutex m;
-	std::lock_guard<std::mutex> lock(m);
+	std::lock_guard<std::mutex> lock(globalMutex0);/* =>listenerLoop */
 	
-	/* since v17 it is not allowed to call PA_NewProcess() in main process */
 	if (!MFD::MONITOR_PROCESS_ID)
 	{
 		MFD::MONITOR_PROCESS_ID = PA_NewProcess((void *)listenerLoop,
@@ -553,8 +566,7 @@ void listenerLoopStart()
 
 void listenerLoopFinish()
 {
-	std::mutex m;
-	std::lock_guard<std::mutex> lock(m);
+	std::lock_guard<std::mutex> lock(globalMutex);
 	
 	if(MFD::MONITOR_PROCESS_ID)
 	{
@@ -568,8 +580,7 @@ void listenerLoopFinish()
 
 void listenerLoopExecute()
 {
-	std::mutex m;
-	std::lock_guard<std::mutex> lock(m);
+	std::lock_guard<std::mutex> lock(globalMutex);
 	
 	MFD::MONITOR_PROCESS_SHOULD_TERMINATE = false;
 	MFD::PROCESS_SHOULD_RESUME = true;
@@ -577,8 +588,7 @@ void listenerLoopExecute()
 
 void listenerLoopExecuteMethod()
 {
-	std::mutex m;
-	std::lock_guard<std::mutex> lock(m);
+	std::lock_guard<std::mutex> lock(globalMutex);
 	
 	std::vector<CUTF16String>::iterator p = MFD::CALLBACK_EVENT_PATHS.begin();
 	CUTF16String event_path = *p;
@@ -631,6 +641,8 @@ void listenerLoopExecuteMethod()
 }
 
 #pragma mark MyDropTarget
+
+#if VERSIONWIN
 
 class MyDropTarget : public IDropTarget
 {
@@ -867,8 +879,7 @@ private:
 								std::vector<unsigned char>buf((len)*sizeof(wchar_t));
 								if (DragQueryFile(hDrop, i, (LPTSTR)&buf[0], len))
 								{
-									std::mutex m;
-									std::lock_guard<std::mutex> lock(m);
+									std::lock_guard<std::mutex> lock(globalMutex);
 
 									MFD::CALLBACK_EVENT_PATHS.push_back(CUTF16String((const PA_Unichar *)&buf[0], len));
 								}
@@ -908,8 +919,11 @@ private:
 	
 };
 
+#endif
+
 #pragma mark OleInitClass
 
+#if VERSIONWIN
 class OleInitClass {
 	
 public:
@@ -925,6 +939,8 @@ public:
 OleInitClass g_OleInitClass;
 MyDropTarget g_MyDropTarget;
 
+#endif
+
 // ------------------------------- Message file drop ------------------------------
 
 void ACCEPT_MESSAGE_FILES(sLONG_PTR *pResult, PackagePtr pParams)
@@ -937,9 +953,6 @@ void ACCEPT_MESSAGE_FILES(sLONG_PTR *pResult, PackagePtr pParams)
 #if VERSIONWIN
 	if(!IsProcessOnExit())
 	{
-		std::mutex m;
-		std::lock_guard<std::mutex> lock(m);
-		
 		MFD::WATCH_METHOD.fromParamAtIndex(pParams, 2);
 		MFD::WATCH_CONTEXT.fromParamAtIndex(pParams, 3);
 

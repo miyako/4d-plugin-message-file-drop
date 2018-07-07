@@ -16,9 +16,10 @@
 #define CALLBACK_SLEEP_TIME 59
 #define THIS_BUNDLE_NAME L"Message file drop.4DX"
 #define VBS_FILE_NAME L"outlook_export_selected_messages.vbs"
+#endif
+
 #include <mutex>
 #include <algorithm>
-#endif
 
 // --- Message file drop
 void ACCEPT_MESSAGE_FILES(sLONG_PTR *pResult, PackagePtr pParams);
