@@ -78,16 +78,14 @@ void CommandDispatcher (PA_long32 pProcNum, sLONG_PTR *pResult, PackagePtr pPara
 		case kServerInitPlugin :
 			OnStartup();
 			break;
-			
-        case kDeinitPlugin :
-        OnExit();
-        break;
+		/* this is too late to break listenerloop */	
+        //case kDeinitPlugin :
+        //OnExit();
+        //break;
         
-        /*
-         case kCloseProcess :
-         OnCloseProcess();
-         break;
-         */
+		case kCloseProcess:
+			OnCloseProcess();
+			break;
 			
 		case 1 :
 			ACCEPT_MESSAGE_FILES(pResult, pParams);
@@ -118,7 +116,6 @@ void OnExit()
     listenerLoopFinish();
 }
 
-/*
 void OnCloseProcess()
 {
 	if(IsProcessOnExit())
@@ -126,7 +123,6 @@ void OnCloseProcess()
 		OnExit();
 	}
 }
- */
 
 #pragma mark -
 
@@ -1007,7 +1003,7 @@ void ACCEPT_MESSAGE_FILES(sLONG_PTR *pResult, PackagePtr pParams)
 		{
 			g_MyDropTarget.Unregister();
 
-			//listenerLoopFinish(); 
+			listenerLoopFinish(); 
 		}
 	
 	}/* IsProcessOnExit */
