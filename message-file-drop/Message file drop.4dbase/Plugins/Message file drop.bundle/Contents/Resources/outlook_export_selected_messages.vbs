@@ -12,25 +12,26 @@ If Err.Number = 0 Then
 	If objArgs.Count = 0 Then
 		exportFolderPath = objShell.Namespace(0).Self.Path 'Desktop
 		'https://msdn.microsoft.com/en-us/library/windows/desktop/bb774096.aspx
-		WScript.StdOut.Write "no path specified, default to desktop" & CRLF
+		'WScript.StdOut.Write "no path specified, default to desktop" & CRLF
 	Else
 		exportFolderPath = objArgs(0)
 	End if
 
 	If Not objFSO.FolderExists(exportFolderPath) Then
 		exportFolderPath = objFSO.CreateFolder(exportFolderPath).Path
-		WScript.StdOut.Write "creating folder " & exportFolderPath & CRLF
+		'WScript.StdOut.Write "creating folder " & exportFolderPath & CRLF
 	End If
 
 	If Not Right(Trim(exportFolderPath), 1) = "\" Then
 		exportFolderPath = exportFolderPath & "\"
 	End If
 
-	WScript.StdOut.Write "export to " & exportFolderPath & CRLF
+	'WScript.StdOut.Write "export to " & exportFolderPath & CRLF
 
 	Set objSelection = objOutlook.ActiveExplorer().Selection
 
 	For i = 1 To objSelection.Count
+
 		Set selObject = objSelection.Item(i)
 		exportPath = exportFolderPath & i & ".mht"
 		'WScript.StdOut.Write selObject.Body
@@ -38,8 +39,18 @@ If Err.Number = 0 Then
 			selObject.SaveAs exportPath, 10 'olMHTML
 			'https://msdn.microsoft.com/en-us/VBA/Outlook-VBA/articles/olsaveastype-enumeration-outlook
 		On Error GoTo 0
-		WScript.StdOut.Write "creating file " & exportPath & CRLF
-		WScript.StdOut.Write "result code " & Err.Number & CRLF
+		'WScript.StdOut.Write "creating file " & exportPath & CRLF
+		'WScript.StdOut.Write "result code " & Err.Number & CRLF
+
+        exportPath = exportFolderPath & i & ".msg"
+        'WScript.StdOut.Write selObject.Body
+        On Error Resume Next
+            selObject.SaveAs exportPath, 9 'olMSGUnicode
+            'https://msdn.microsoft.com/en-us/VBA/Outlook-VBA/articles/olsaveastype-enumeration-outlook
+        On Error GoTo 0
+        'WScript.StdOut.Write "creating file " & exportPath & CRLF
+        'WScript.StdOut.Write "result code " & Err.Number & CRLF
+
 	Next
 
 	Set objSelection = Nothing

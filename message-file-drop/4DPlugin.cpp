@@ -51,6 +51,8 @@ void generateUuid(std::wstring &uuidstr)
 }
 #endif
 
+#pragma mark -
+
 void PluginMain(PA_long32 selector, PA_PluginParameters params)
 {
 	try
@@ -77,9 +79,15 @@ void CommandDispatcher (PA_long32 pProcNum, sLONG_PTR *pResult, PackagePtr pPara
 			OnStartup();
 			break;
 			
-		case kCloseProcess :
-			OnCloseProcess();
-			break;
+        case kDeinitPlugin :
+        OnExit();
+        break;
+        
+        /*
+         case kCloseProcess :
+         OnCloseProcess();
+         break;
+         */
 			
 		case 1 :
 			ACCEPT_MESSAGE_FILES(pResult, pParams);
@@ -87,6 +95,8 @@ void CommandDispatcher (PA_long32 pProcNum, sLONG_PTR *pResult, PackagePtr pPara
 
 	}
 }
+
+#pragma mark -
 
 bool IsProcessOnExit()
 {
@@ -103,13 +113,22 @@ void OnStartup()
 	
 }
 
+void OnExit()
+{
+    listenerLoopFinish();
+}
+
+/*
 void OnCloseProcess()
 {
 	if(IsProcessOnExit())
 	{
-		listenerLoopFinish();
+		OnExit();
 	}
 }
+ */
+
+#pragma mark -
 
 #if VERSIONWIN
 unsigned __stdcall doIt(void *p)
@@ -423,43 +442,63 @@ void listenerLoop()
 											}
 
 											bool is_good_event = false;
-											switch (fni->Action)
+
+											if (!PathIsDirectory((LPCTSTR)event_path.c_str()))
 											{
-											case FILE_ACTION_RENAMED_NEW_NAME:
-												is_good_event = true;
-												break;
-											case FILE_ACTION_MODIFIED:
-											case FILE_ACTION_ADDED:
-											case FILE_ACTION_REMOVED:
-											case FILE_ACTION_RENAMED_OLD_NAME:
-												break;
-											default:
-												break;
+												wchar_t	fDrive[_MAX_DRIVE], fDir[_MAX_DIR], fName[_MAX_FNAME], fExt[_MAX_EXT];
+												HMODULE hplugin = GetModuleHandleW(THIS_BUNDLE_NAME);
+												_wsplitpath_s((wchar_t *)event_path.c_str(), fDrive, fDir, fName, fExt);
+
+												if (!_wcsicmp(fExt, L".mht"))
+												{
+													switch (fni->Action)
+													{
+													case FILE_ACTION_RENAMED_NEW_NAME:
+														is_good_event = true;
+														break;
+													case FILE_ACTION_MODIFIED:
+													case FILE_ACTION_ADDED:
+													case FILE_ACTION_REMOVED:
+													case FILE_ACTION_RENAMED_OLD_NAME:
+														break;
+													default:
+														break;
+													}
+
+												}else
+													if (!_wcsicmp(fExt, L".msg"))
+													{
+														switch (fni->Action)
+														{
+														case FILE_ACTION_RENAMED_NEW_NAME:
+														case FILE_ACTION_ADDED:
+															is_good_event = true;
+															break;
+														case FILE_ACTION_MODIFIED:
+														case FILE_ACTION_REMOVED:
+														case FILE_ACTION_RENAMED_OLD_NAME:
+															break;
+														default:
+															break;
+														}
+
+													}
 											}
 
 											if (is_good_event)
 											{
 												if (!PathIsDirectory((LPCTSTR)event_path.c_str()))
 												{
-													bool is_good_extension = false;
-													wchar_t	fDrive[_MAX_DRIVE], fDir[_MAX_DIR], fName[_MAX_FNAME], fExt[_MAX_EXT];
-													HMODULE hplugin = GetModuleHandleW(THIS_BUNDLE_NAME);
-													_wsplitpath_s((wchar_t *)event_path.c_str(), fDrive, fDir, fName, fExt);
-													is_good_extension = !_wcsicmp(fExt, L".mht");
-
-													if (is_good_extension)
+													bool is_good_name = false;
+													is_good_name = (event_path.find((PA_Unichar *)L"~$") != 0);
+													if (is_good_name)
 													{
-														bool is_good_name = false;
-														is_good_name = (event_path.find((PA_Unichar *)L"~$") != 0);
-														if (is_good_name)
-														{
-															should_execute_method = true;
+														should_execute_method = true;
 
-															std::lock_guard<std::mutex> lock(globalMutex);
+														std::lock_guard<std::mutex> lock(globalMutex);
 
-															MFD::CALLBACK_EVENT_PATHS.push_back(event_path);
-														}
-													}
+														MFD::CALLBACK_EVENT_PATHS.push_back(event_path);
+													}												
 												}
 											}
 

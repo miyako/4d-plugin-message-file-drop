@@ -26,6 +26,7 @@ void ACCEPT_MESSAGE_FILES(sLONG_PTR *pResult, PackagePtr pParams);
 
 bool IsProcessOnExit();
 void OnStartup();
+void OnExit();
 void OnCloseProcess();
 
 void listenerLoop(void);
