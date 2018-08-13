@@ -11,21 +11,27 @@
 #include "4DPluginAPI.h"
 #include "4DPlugin.h"
 
-std::mutex globalMutex;
-std::mutex globalMutex0;
+std::mutex globalMutex; /* WATCH_PATHS,CALLBACK_EVENT_PATHS */
+std::mutex globalMutex1;/* for METHOD_PROCESS_ID */
+std::mutex globalMutex2;/* for LISTENER_METHOD,WATCH_CONTEXT */
+std::mutex globalMutex3;/* PROCESS_SHOULD_TERMINATE */
+std::mutex globalMutex4;/* PROCESS_SHOULD_RESUME */
 
 namespace MFD
 {
+    //constants
+    const process_stack_size_t MONITOR_PROCESS_STACK_SIZE = 0;
 	const process_name_t MONITOR_PROCESS_NAME = (PA_Unichar *)L"$MFD";
-	process_number_t MONITOR_PROCESS_ID = 0;
-	const process_stack_size_t MONITOR_PROCESS_STACK_SIZE = 0;
-	bool MONITOR_PROCESS_SHOULD_TERMINATE = false;
-	C_TEXT WATCH_METHOD;
+    
+    //context management
 	C_TEXT WATCH_CONTEXT;
 	ARRAY_TEXT WATCH_PATHS;
 	std::vector<CUTF16String>CALLBACK_EVENT_PATHS;
-	double MONITOR_LATENCY;
 
+     //callback management
+    C_TEXT LISTENER_METHOD;
+    process_number_t METHOD_PROCESS_ID = 0;
+    bool MONITOR_PROCESS_SHOULD_TERMINATE = false;
 	bool PROCESS_SHOULD_RESUME = false;
 }
 
@@ -235,10 +241,15 @@ void listenerLoop()
 
 	if (1)
 	{
-		std::lock_guard<std::mutex> lock(globalMutex);
 		
 #if VERSIONWIN
-		MFD::MONITOR_PROCESS_SHOULD_TERMINATE = false;
+        if(1)
+        {
+            std::lock_guard<std::mutex> lock(globalMutex3);
+            
+            MFD::MONITOR_PROCESS_SHOULD_TERMINATE = false;
+        }
+
 		for (UINT i = 0; i < MFD::WATCH_PATHS.getSize(); ++i)
 		{
 			CUTF16String path;
@@ -332,6 +343,9 @@ void listenerLoop()
 		
 		BOOL exit = FALSE;
 		
+        /* Current process returns 0 for PA_NewProcess */
+        PA_long32 currentProcessNumber = PA_GetCurrentProcessNumber();
+        
 		do {
 			DWORD count = WaitForMultipleObjects(signals.size(), &signals[0], FALSE, 16);//1 tick = 0.0166666
 			switch (count)
@@ -341,14 +355,12 @@ void listenerLoop()
 					/* process (queued) file drop events */
 					if (1)
 					{
-						std::lock_guard<std::mutex> lock(globalMutex0);/* =>listenerLoopExecuteMethod */
-						
 						if (MFD::CALLBACK_EVENT_PATHS.size())
 						{
 							listenerLoopExecuteMethod();
 						}
 					}
-					PA_PutProcessToSleep(PA_GetCurrentProcessNumber(), CALLBACK_SLEEP_TIME);//59 ticks
+					PA_PutProcessToSleep(currentProcessNumber, CALLBACK_SLEEP_TIME);//59 ticks
 					break;
 				case WAIT_FAILED:
 					exit = TRUE;
@@ -576,21 +588,27 @@ void listenerLoop()
 		std::lock_guard<std::mutex> lock(globalMutex);
 
 		MFD::CALLBACK_EVENT_PATHS.clear();
-		MFD::MONITOR_PROCESS_ID = 0;
 	}
+    
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(globalMutex1);
+        
+        MFD::METHOD_PROCESS_ID = 0;
+    }
 	
 	PA_KillProcess();
 }
 
 void listenerLoopStart()
 {
-	std::lock_guard<std::mutex> lock(globalMutex0);/* =>listenerLoop */
-	
-	if (!MFD::MONITOR_PROCESS_ID)
+	if (!MFD::METHOD_PROCESS_ID)
 	{
-		MFD::MONITOR_PROCESS_ID = PA_NewProcess((void *)listenerLoop,
-																						MFD::MONITOR_PROCESS_STACK_SIZE,
-																						MFD::MONITOR_PROCESS_NAME);
+        std::lock_guard<std::mutex> lock(globalMutex1);
+        
+        MFD::METHOD_PROCESS_ID = PA_NewProcess((void *)listenerLoop,
+                                                MFD::MONITOR_PROCESS_STACK_SIZE,
+                                                MFD::MONITOR_PROCESS_NAME);
 	}
 	else
 	{
@@ -601,34 +619,59 @@ void listenerLoopStart()
 
 void listenerLoopFinish()
 {
-	std::lock_guard<std::mutex> lock(globalMutex);
-	
-	if(MFD::MONITOR_PROCESS_ID)
+	if(MFD::METHOD_PROCESS_ID)
 	{
-		MFD::MONITOR_PROCESS_SHOULD_TERMINATE = true;
-		
+        if(1)
+        {
+            std::lock_guard<std::mutex> lock(globalMutex3);
+            
+            MFD::MONITOR_PROCESS_SHOULD_TERMINATE = true;
+        }
+
 		PA_YieldAbsolute();
 		
-		MFD::PROCESS_SHOULD_RESUME = true;
+        if(1)
+        {
+            std::lock_guard<std::mutex> lock(globalMutex4);
+
+            MFD::PROCESS_SHOULD_RESUME = true;
+        }
 	}
 }
 
 void listenerLoopExecute()
 {
-	std::lock_guard<std::mutex> lock(globalMutex);
-	
-	MFD::MONITOR_PROCESS_SHOULD_TERMINATE = false;
-	MFD::PROCESS_SHOULD_RESUME = true;
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(globalMutex3);
+        
+        MFD::MONITOR_PROCESS_SHOULD_TERMINATE = false;
+    }
+
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(globalMutex4);
+        
+        MFD::PROCESS_SHOULD_RESUME = true;
+    }
 }
 
 void listenerLoopExecuteMethod()
 {
-	std::lock_guard<std::mutex> lock(globalMutex);
-	
-	std::vector<CUTF16String>::iterator p = MFD::CALLBACK_EVENT_PATHS.begin();
-	CUTF16String event_path = *p;
-	
-	method_id_t methodId = PA_GetMethodID((PA_Unichar *)MFD::WATCH_METHOD.getUTF16StringPtr());
+    CUTF16String event_path;
+    
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(globalMutex);
+        
+        std::vector<CUTF16String>::iterator p = MFD::CALLBACK_EVENT_PATHS.begin();
+        
+        event_path = *p;
+     
+        MFD::CALLBACK_EVENT_PATHS.erase(p);
+    }
+
+	method_id_t methodId = PA_GetMethodID((PA_Unichar *)MFD::LISTENER_METHOD.getUTF16StringPtr());
 	
 	if(methodId)
 	{
@@ -642,8 +685,6 @@ void listenerLoopExecuteMethod()
 		PA_SetStringVariable(&params[0], &path);
 		PA_SetStringVariable(&params[1], &context);
 
-		MFD::CALLBACK_EVENT_PATHS.erase(p);
-		
 		PA_ExecuteMethodByID(methodId, params, 2);
 		
 		PA_ClearVariable(&params[0]);
@@ -662,10 +703,8 @@ void listenerLoopExecuteMethod()
 		PA_SetStringVariable(&params[2], &context);
 		
 		params[0] = PA_CreateVariable(eVK_Unistring);
-		PA_Unistring method = PA_CreateUnistring((PA_Unichar *)MFD::WATCH_METHOD.getUTF16StringPtr());
+		PA_Unistring method = PA_CreateUnistring((PA_Unichar *)MFD::LISTENER_METHOD.getUTF16StringPtr());
 		PA_SetStringVariable(&params[0], &method);
-
-		MFD::CALLBACK_EVENT_PATHS.erase(p);
 		
 		PA_ExecuteCommandByID(1007, params, 2);
 		
@@ -988,9 +1027,14 @@ void ACCEPT_MESSAGE_FILES(sLONG_PTR *pResult, PackagePtr pParams)
 #if VERSIONWIN
 	if(!IsProcessOnExit())
 	{
-		MFD::WATCH_METHOD.fromParamAtIndex(pParams, 2);
-		MFD::WATCH_CONTEXT.fromParamAtIndex(pParams, 3);
-
+        if(1)
+        {
+            std::lock_guard<std::mutex> lock(globalMutex2);
+            
+            MFD::LISTENER_METHOD.fromParamAtIndex(pParams, 2);
+            MFD::WATCH_CONTEXT.fromParamAtIndex(pParams, 3);
+        }
+        
 		HWND hwnd = (HWND)PA_GetHWND((PA_WindowRef)Param1_window.getIntValue());
 		
 		if(hwnd)
