@@ -16,6 +16,15 @@
 #define CALLBACK_SLEEP_TIME 59
 #define THIS_BUNDLE_NAME L"Message file drop.4DX"
 #define VBS_FILE_NAME L"outlook_export_selected_messages.vbs"
+
+#include <olectl.h>
+#include <iostream>
+#include <new>
+#include <exception>
+#include <vector>
+#include <iomanip>
+#include "ichigocomhelper.h"
+void outlook_export_selected_messages();
 #endif
 
 #include <mutex>

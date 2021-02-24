@@ -100,7 +100,7 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			BmsW+iEl5W/YlEj1euGwSEqqWg4=
+			ejT6YNzONEMDzx50swapkMvYkbs=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -384,11 +384,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			BmsW+iEl5W/YlEj1euGwSEqqWg4=
+			ejT6YNzONEMDzx50swapkMvYkbs=
 			</data>
 			<key>hash2</key>
 			<data>
-			6tDv+XrA5aXuE33EPR/kLnDZiUk/J6oSxNiIBjNlfyM=
+			S4D9eDddmEpEdJTSHTbBEx3v4MbkkJPTnuHnk0yfwU4=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -419,22 +419,121 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			aYEX4yZXOGhcSbgReOhUSHgKyfg=
+			KECTTkxavqOe+cpaRA1nsrsM3Jo=
 			</data>
 			<key>hash2</key>
 			<data>
-			/M2U8wUaSMj9Puao8TQMWZlhFOe8cNh3oYwSRNx2vno=
+			RKhQPsd2YI69pFrFh0DLxka5NIwPYZmfPnieckrHPMI=
+			</data>
+		</dict>
+		<key>Windows/Message file drop.exp</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			PtbU89AsAGeFzp5JG4zttlyCOQg=
+			</data>
+			<key>hash2</key>
+			<data>
+			DHS+Y0NOtBejeHex/PcnlW1JoJMUiE8ehG8j3AyK1HA=
+			</data>
+		</dict>
+		<key>Windows/Message file drop.iobj</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			WHTOAUl+JPM7fyDxbDLhK8TpPsg=
+			</data>
+			<key>hash2</key>
+			<data>
+			ShoQNyHAvm6G5w/Sl2jhAMoYu0KmklE2f5Dl0XXrDpc=
+			</data>
+		</dict>
+		<key>Windows/Message file drop.ipdb</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			+wo5jjZBX1tgfVLT961Get0exVc=
+			</data>
+			<key>hash2</key>
+			<data>
+			ZB3cmszlywyKfXSMbXuf4DJf05ANxMw89XDpSlFkGc0=
+			</data>
+		</dict>
+		<key>Windows/Message file drop.lib</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			TiFZC4LsuLsuiuolOPTOyGpCRYw=
+			</data>
+			<key>hash2</key>
+			<data>
+			GlPL8NNZYxI19ks2/uf0JpJeVGNzY9ZxcS6bXCvTkmY=
 			</data>
 		</dict>
 		<key>Windows64/Message file drop.4DX</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			ukTU66wlej1HKsjRjgTVaLOR1P4=
+			1dnFbi32n9hcnOxFtxanLR0Q/L4=
 			</data>
 			<key>hash2</key>
 			<data>
-			IGO43gcJeGjsjKMq1T4rF6LaC64aCVl0sxcbwbXQdu4=
+			259jITmQoU6sNrx0VF08Zo5Vz+tSUspynMDRkPmIDbA=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.exp</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			j/HvnTZIKiE/GvtIifrHy8V1rPQ=
+			</data>
+			<key>hash2</key>
+			<data>
+			u5GhpeYbB1VOhbZrVSKgRfcz2jARwboqyJm1Spix/ho=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.iobj</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			4GhQQIuNPssySuBnU1W0mINxhwo=
+			</data>
+			<key>hash2</key>
+			<data>
+			sXdcl7OAsgOsxhhWF8ff6E/lR+RK+Kvw3FeDV54UWrY=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.ipdb</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			1dxv2nGPSfIoyWYciZh/mAOaSDE=
+			</data>
+			<key>hash2</key>
+			<data>
+			dVdkeFVZ+b3okExUZx3GQJkWAFr6Iw4zfPOMm9bzEfA=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.lib</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			32ozj8XfclpzFlcU2eBTplVMN2M=
+			</data>
+			<key>hash2</key>
+			<data>
+			gYSCDu+dVkI6/2R4YKuVMzVuSwlY9OiQEmcaJCortz4=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.pdb</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			o9bZQVhpAeFBCNGQhw5h4hTwjV8=
+			</data>
+			<key>hash2</key>
+			<data>
+			0znzY0BTBtuR+rVuXKC5YUJjSndtr/Js9wrqKo7eEfA=
 			</data>
 		</dict>
 		<key>manifest.json</key>

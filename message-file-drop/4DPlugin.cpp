@@ -17,16 +17,25 @@ std::mutex globalMutex2;/* for LISTENER_METHOD,WATCH_CONTEXT */
 std::mutex globalMutex3;/* PROCESS_SHOULD_TERMINATE */
 std::mutex globalMutex4;/* PROCESS_SHOULD_RESUME */
 
+#define NO_FOLDER_WATCH 1
+
 namespace MFD
 {
     //constants
     const process_stack_size_t MONITOR_PROCESS_STACK_SIZE = 0;
 	const process_name_t MONITOR_PROCESS_NAME = (PA_Unichar *)L"$MFD";
     
-    //context management
 	C_TEXT WATCH_CONTEXT;
+
+    //context management
+#if NO_FOLDER_WATCH
+	std::vector<CUTF16String> CALLBACK_MSG;
+	std::vector<CUTF16String> CALLBACK_MHT;
+	std::vector<CUTF16String> CALLBACK_HTMLBODY;
+#else
 	ARRAY_TEXT WATCH_PATHS;
 	std::vector<CUTF16String>CALLBACK_EVENT_PATHS;
+#endif
 
      //callback management
     C_TEXT LISTENER_METHOD;
@@ -131,6 +140,443 @@ void OnCloseProcess()
 }
 
 #pragma mark -
+
+#if VERSIONWIN
+IDispatch *get_outlook_application() {
+
+    IDispatch *pDispatch = NULL;
+
+    CLSID CLSID_outlook_application;
+    HRESULT hr = CLSIDFromProgID(L"Outlook.Application", &CLSID_outlook_application);
+    if (SUCCEEDED(hr)) {
+        IUnknown *pUnknown;
+        hr = GetActiveObject(CLSID_outlook_application, NULL, (IUnknown **)&pUnknown);
+        if (FAILED(hr)) {
+            hr = CoCreateInstance(CLSID_outlook_application, NULL, CLSCTX_LOCAL_SERVER, IID_PPV_ARGS(&pDispatch));
+            if (FAILED(hr)) {
+                pDispatch = NULL;
+            }
+        }
+        else {
+            hr = pUnknown->QueryInterface(IID_PPV_ARGS(&pDispatch));
+            if (FAILED(hr)) {
+                pDispatch = NULL;
+            }
+        }
+    }
+
+    return pDispatch;
+}
+
+bool invoke_DISPATCH_METHOD_VT_DISPATCH(DISPID dispid, IDispatch *pDispatch, IDispatch **returnValue) {
+
+    bool        success = false;
+    HRESULT        hr;
+
+    /*
+    *    return value
+    */
+
+    VARIANT        varResult;
+    VariantInit(&varResult);
+    varResult.vt = VT_DISPATCH;
+
+    /*
+    *    arguments
+    */
+
+    size_t cArgs = 0;
+    std::vector<VARIANT>args(cArgs);
+
+    DISPPARAMS    dispParams;
+    dispParams.cArgs = cArgs;
+    dispParams.rgvarg = cArgs ? &args[0] : NULL;
+    dispParams.cNamedArgs = 0;
+    dispParams.rgdispidNamedArgs = NULL;
+
+    /*
+    *    error
+    */
+
+    EXCEPINFO    excepInfo = { 0 };
+
+    hr = pDispatch->Invoke(dispid, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &dispParams, &varResult, &excepInfo, NULL);
+
+    if ((hr == S_OK) && (varResult.vt == VT_DISPATCH)) {
+        *returnValue = varResult.pdispVal;
+        success = true;
+    }
+
+    return success;
+}
+
+bool invoke_DISPATCH_METHOD_VT_I4_VT_DISPATCH(DISPID dispid, IDispatch *pDispatch, long arg1, IDispatch **returnValue) {
+
+    bool        success = false;
+    HRESULT        hr;
+
+    /*
+    *    return value
+    */
+
+    VARIANT        varResult;
+    VariantInit(&varResult);
+    varResult.vt = VT_DISPATCH;
+
+    /*
+    *    arguments
+    */
+
+    size_t cArgs = 1;
+    std::vector<VARIANT>args(cArgs);
+
+    VariantInit(&args[0]);
+    args[0].vt = VT_I4;
+    args[0].lVal = arg1;
+
+    DISPPARAMS    dispParams;
+    dispParams.cArgs = cArgs;
+    dispParams.rgvarg = cArgs ? &args[0] : NULL;
+    dispParams.cNamedArgs = 0;
+    dispParams.rgdispidNamedArgs = NULL;
+
+    /*
+    *    error
+    */
+
+    EXCEPINFO    excepInfo = { 0 };
+
+    hr = pDispatch->Invoke(dispid, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &dispParams, &varResult, &excepInfo, NULL);
+
+    if ((hr == S_OK) && (varResult.vt == VT_DISPATCH)) {
+        *returnValue = varResult.pdispVal;
+        success = true;
+    }
+
+    return success;
+}
+
+bool invoke_DISPATCH_PROPERTYGET_VT_I4(DISPID dispid, IDispatch *pDispatch, long *returnValue) {
+
+    bool        success = false;
+    HRESULT        hr;
+
+    /*
+    *    return value
+    */
+
+    VARIANT        varResult;
+    VariantInit(&varResult);
+    varResult.vt = VT_I4;
+
+    /*
+    *    arguments
+    */
+
+    size_t cArgs = 0;
+    std::vector<VARIANT>args(cArgs);
+
+    DISPPARAMS    dispParams;
+    dispParams.cArgs = cArgs;
+    dispParams.rgvarg = cArgs ? &args[0] : NULL;
+    dispParams.cNamedArgs = 0;
+    dispParams.rgdispidNamedArgs = NULL;
+
+    /*
+    *    error
+    */
+
+    EXCEPINFO    excepInfo = { 0 };
+
+    hr = pDispatch->Invoke(dispid, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYGET, &dispParams, &varResult, &excepInfo, NULL);
+
+    if ((hr == S_OK) && (varResult.vt == VT_I4)) {
+        *returnValue = varResult.lVal;
+        success = true;
+    }
+
+    return success;
+}
+
+bool invoke_DISPATCH_METHOD_VT_I4_VT_BSTR_VT_EMPTY(DISPID dispid, IDispatch *pDispatch, long arg1, const wchar_t *arg2) {
+
+    bool        success = false;
+    HRESULT        hr;
+
+    /*
+    *    return value
+    */
+
+    VARIANT        varResult;
+    VariantInit(&varResult);
+    varResult.vt = VT_EMPTY;
+
+    /*
+    *    arguments
+    */
+
+    size_t cArgs = 2;
+    std::vector<VARIANT>args(cArgs);
+
+    VariantInit(&args[1]);
+    args[1].vt = VT_BSTR;
+    BSTR str1 = SysAllocString((const OLECHAR *)arg2);
+    args[1].bstrVal = str1;
+
+    VariantInit(&args[0]);
+    args[0].vt = VT_UINT;
+    args[0].uintVal = arg1;
+
+    DISPPARAMS    dispParams;
+    dispParams.cArgs = cArgs;
+    dispParams.rgvarg = cArgs ? &args[0] : NULL;
+    dispParams.cNamedArgs = 0;
+    dispParams.rgdispidNamedArgs = NULL;
+
+    /*
+    *    error
+    */
+
+    EXCEPINFO    excepInfo = { 0 };
+
+    hr = pDispatch->Invoke(dispid, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &dispParams, &varResult, &excepInfo, NULL);
+
+    if (hr == S_OK) {
+        success = true;
+    }
+
+    SysFreeString(str1);
+
+    return success;
+}
+
+bool invoke_DISPATCH_PROPERTYGET_VT_BSTR(DISPID dispid, IDispatch *pDispatch, CUTF16String& returnValue) {
+
+    bool        success = false;
+    HRESULT        hr;
+
+    /*
+    *    return value
+    */
+
+    VARIANT        varResult;
+    VariantInit(&varResult);
+    varResult.vt = VT_BSTR;
+
+    /*
+    *    arguments
+    */
+
+    size_t cArgs = 0;
+    std::vector<VARIANT>args(cArgs);
+
+    DISPPARAMS    dispParams;
+    dispParams.cArgs = cArgs;
+    dispParams.rgvarg = cArgs ? &args[0] : NULL;
+    dispParams.cNamedArgs = 0;
+    dispParams.rgdispidNamedArgs = NULL;
+
+    /*
+    *    error
+    */
+
+    EXCEPINFO    excepInfo = { 0 };
+
+    hr = pDispatch->Invoke(dispid, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYGET, &dispParams, &varResult, &excepInfo, NULL);
+
+    if ((hr == S_OK) && (varResult.vt == VT_BSTR)) {
+        if (varResult.bstrVal) {
+            returnValue = (const PA_Unichar *)varResult.bstrVal;
+            SysFreeString(varResult.bstrVal);
+        }
+        else {
+            returnValue = (const PA_Unichar *)L"";
+
+        }
+        success = true;
+    }
+
+    return success;
+}
+
+bool invoke_DISPATCH_PROPERTYGET_VT_DISPATCH(DISPID dispid, IDispatch *pDispatch, IDispatch **returnValue) {
+
+	bool		success = false;
+	HRESULT		hr;
+
+	/*
+	*	return value
+	*/
+
+	VARIANT		varResult;
+	VariantInit(&varResult);
+	varResult.vt = VT_DISPATCH;
+
+	/*
+	*	arguments
+	*/
+
+	size_t cArgs = 0;
+	std::vector<VARIANT>args(cArgs);
+
+	DISPPARAMS	dispParams;
+	dispParams.cArgs = cArgs;
+	dispParams.rgvarg = cArgs ? &args[0] : NULL;
+	dispParams.cNamedArgs = 0;
+	dispParams.rgdispidNamedArgs = NULL;
+
+	/*
+	*	error
+	*/
+
+	EXCEPINFO	excepInfo = { 0 };
+
+	hr = pDispatch->Invoke(dispid, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYGET, &dispParams, &varResult, &excepInfo, NULL);
+
+	if ((hr == S_OK) && (varResult.vt == VT_DISPATCH)) {
+		*returnValue = varResult.pdispVal;
+		success = true;
+	}
+
+	return success;
+}
+
+namespace CApplication {
+
+    bool ActiveExplorer(IDispatch *pDispatch, IDispatch **pExplorer) {
+        
+        return invoke_DISPATCH_METHOD_VT_DISPATCH(0x111, pDispatch, pExplorer);
+    }
+
+}
+
+namespace CExplorer {
+
+    bool get_Selection(IDispatch *pDispatch, IDispatch **pSelection) {
+        
+        return invoke_DISPATCH_PROPERTYGET_VT_DISPATCH(0x2202, pDispatch, pSelection);
+    }
+
+}
+
+namespace CItems {
+
+    bool get_Count(IDispatch *pDispatch, long *count) {
+        return invoke_DISPATCH_PROPERTYGET_VT_I4(0x50, pDispatch, count);
+    }
+
+    bool Item(IDispatch *pDispatch, long index, IDispatch **pItem) {
+        return invoke_DISPATCH_METHOD_VT_I4_VT_DISPATCH(0x51, pDispatch, index, pItem);
+    }
+
+}
+
+namespace CMailItem {
+
+    bool get_Class(IDispatch *pDispatch, long *olObjClass) {
+        return invoke_DISPATCH_PROPERTYGET_VT_I4(0xf00a, pDispatch, olObjClass);
+    }
+
+    bool get_HTMLBody(IDispatch *pDispatch, CUTF16String& htmlBody) {
+
+        return invoke_DISPATCH_PROPERTYGET_VT_BSTR(0xf404, pDispatch, htmlBody);
+    }
+
+    bool SaveAs(IDispatch *pDispatch, const wchar_t *path, long type) {
+
+        return invoke_DISPATCH_METHOD_VT_I4_VT_BSTR_VT_EMPTY(0xf051, pDispatch, type, path);
+    }
+}
+
+void getTempFolder(std::wstring& path) {
+	wchar_t	fDrive[_MAX_DRIVE], fDir[_MAX_DIR], fName[_MAX_FNAME], fExt[_MAX_EXT];
+	std::vector<wchar_t>_buf(_MAX_DRIVE + _MAX_DIR + _MAX_FNAME + _MAX_EXT);
+	GetTempPath(_buf.size(), (LPWSTR)&_buf[0]);
+	path = (LPWSTR)&_buf[0];
+
+	std::wstring uuid;
+	generateUuid(uuid);
+
+	path += uuid;
+	path += L"\\";
+
+	SHCreateDirectory(NULL, (PCWSTR)path.c_str());
+}
+
+void getEnumFile(const wchar_t *folder, long index, const wchar_t *extension, CUTF16String& path) {
+#define LENGTH_OF_LONG 21
+	wchar_t digits[LENGTH_OF_LONG];
+	ZeroMemory(digits, LENGTH_OF_LONG * sizeof(wchar_t));
+	_itow(index, digits, LENGTH_OF_LONG);
+	path  = (const PA_Unichar *)folder;
+	path += (const PA_Unichar *)digits;
+	path += (const PA_Unichar *)extension;
+}
+
+void outlook_export_selected_messages(){
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (SUCCEEDED(hr)) {
+        IDispatch *pDispatch = get_outlook_application();
+        if (pDispatch) {
+            
+            IDispatch *pExplorer = NULL;
+            if (CApplication::ActiveExplorer(pDispatch, &pExplorer) && (pExplorer != NULL)){
+                IDispatch *pSelection = NULL;
+                if (CExplorer::get_Selection(pExplorer, &pSelection) && (pSelection != NULL)){
+                    long count = 0;
+                    if (CItems::get_Count(pSelection, &count)) {
+                        long index = 0;
+
+						std::wstring tempFolder;
+						getTempFolder(tempFolder);
+
+                        while (index < count) {
+                            index++;
+                            IDispatch *pItem = NULL;
+                            if (CItems::Item(pSelection, index, &pItem) && (pItem != NULL)) {
+                                long olObjClass = 0;
+                                if (CMailItem::get_Class(pItem, &olObjClass)) {
+									if (olObjClass == 43 /* olMail */) {
+
+										std::lock_guard<std::mutex> lock(globalMutex);
+
+										CUTF16String htmlBody;
+										CMailItem::get_HTMLBody(pItem, htmlBody);
+										MFD::CALLBACK_HTMLBODY.push_back(htmlBody);
+
+										CUTF16String mhtPath, msgPath;
+
+										getEnumFile(tempFolder.c_str(), index + 1, L".mht", mhtPath);
+										getEnumFile(tempFolder.c_str(), index + 1, L".msg", msgPath);
+
+										CMailItem::SaveAs(pItem, (const wchar_t *)mhtPath.c_str(), 10 /* olMHTML */);
+										CMailItem::SaveAs(pItem, (const wchar_t *)msgPath.c_str(),  9 /* olMSGUnicode */);
+
+										MFD::CALLBACK_MHT.push_back(mhtPath);
+										MFD::CALLBACK_MSG.push_back(msgPath);
+
+									}
+                                }
+                            }
+                        }
+
+						if (1)
+						{
+							std::lock_guard<std::mutex> lock(globalMutex4);
+
+							MFD::PROCESS_SHOULD_RESUME = true;
+						}
+                    }
+                }
+            }
+
+            pDispatch->Release();
+        }
+        CoUninitialize();
+    }
+    
+}
+#endif
 
 #if VERSIONWIN
 unsigned __stdcall doIt(void *p)
@@ -250,6 +696,77 @@ void listenerLoop()
             MFD::MONITOR_PROCESS_SHOULD_TERMINATE = false;
         }
 
+#if NO_FOLDER_WATCH
+		/* Current process returns 0 for PA_NewProcess */
+		PA_long32 currentProcessNumber = PA_GetCurrentProcessNumber();
+
+		while (!PA_IsProcessDying())
+		{
+			PA_YieldAbsolute();
+
+			bool PROCESS_SHOULD_RESUME;
+			bool PROCESS_SHOULD_TERMINATE;
+
+			if (1)
+			{
+				PROCESS_SHOULD_RESUME = MFD::PROCESS_SHOULD_RESUME;
+				PROCESS_SHOULD_TERMINATE = MFD::MONITOR_PROCESS_SHOULD_TERMINATE;
+			}
+
+			if (PROCESS_SHOULD_RESUME)
+			{
+				size_t TYPES;
+
+				if (1)
+				{
+					std::lock_guard<std::mutex> lock(globalMutex);
+
+					TYPES = MFD::CALLBACK_HTMLBODY.size();
+				}
+
+				while (TYPES != 0)
+				{
+					PA_YieldAbsolute();
+
+					if (true)
+					{
+						std::wstring processName;
+						generateUuid(processName);
+						PA_NewProcess((void *)listenerLoopExecuteMethod,
+							MFD::MONITOR_PROCESS_STACK_SIZE,
+							(PA_Unichar *)processName.c_str());
+					}
+					else {
+						listenerLoopExecuteMethod();
+					}
+
+					if (PROCESS_SHOULD_TERMINATE)
+						break;
+
+					if (1)
+					{
+						std::lock_guard<std::mutex> lock(globalMutex);
+
+						TYPES = MFD::CALLBACK_HTMLBODY.size();
+						PROCESS_SHOULD_TERMINATE = MFD::MONITOR_PROCESS_SHOULD_TERMINATE;
+					}
+				}
+
+				if (TYPES == 0)
+				{
+					std::lock_guard<std::mutex> lock(globalMutex4);
+
+					MFD::PROCESS_SHOULD_RESUME = false;
+				}
+
+		}
+			else
+			{
+				PA_PutProcessToSleep(currentProcessNumber, CALLBACK_SLEEP_TIME);
+			}
+
+		}
+#else
 		for (UINT i = 0; i < MFD::WATCH_PATHS.getSize(); ++i)
 		{
 			CUTF16String path;
@@ -268,30 +785,43 @@ void listenerLoop()
 				watch_path_handle_paths.push_back(path);
 			}
 		}
+
+#endif
+
 #endif
 	}
 	
+#if NO_FOLDER_WATCH
+	if (1)
+	{
+		std::lock_guard<std::mutex> lock(globalMutex);
+
+		MFD::CALLBACK_HTMLBODY.clear();
+		MFD::CALLBACK_MHT.clear();
+		MFD::CALLBACK_MSG.clear();
+	}
+#else
 #if VERSIONWIN
 	std::vector<HANDLE>handles;
 	std::vector<HANDLE>signals;
 #endif
-	
+
 	std::vector<CUTF16String>antisignalnames;
 	std::vector<CUTF16String>folderpaths;
-	
+
 #if VERSIONWIN
 	std::vector<Params>params(watch_path_handles.size());
-	
+
 	static const __int64 SECS_BETWEEN_1601_AND_1970_EPOCHS = 116444736000000000LL;
-	
-	if(watch_path_handles.size() <= MAXIMUM_WAIT_OBJECTS)
+
+	if (watch_path_handles.size() <= MAXIMUM_WAIT_OBJECTS)
 	{
 		size_t pos = 0;
-		for(it = watch_path_handles.begin(); it != watch_path_handles.end(); ++it)
+		for (it = watch_path_handles.begin(); it != watch_path_handles.end(); ++it)
 		{
 			HANDLE h = *it;
-			
-			if(h != INVALID_HANDLE_VALUE)
+
+			if (h != INVALID_HANDLE_VALUE)
 			{
 				Params *param = &params.at(pos);
 				CUTF16String folderpath = watch_path_handle_paths.at(pos);
@@ -313,15 +843,15 @@ void listenerLoop()
 				}
 				catch (...)
 				{
-					
+
 				}
-				
+
 				HANDLE a = CreateEvent(NULL,
 					TRUE,
 					FALSE,
 					(const wchar_t *)param->a);
 
-				if(a)
+				if (a)
 				{
 					HANDLE h = (HANDLE)_beginthreadex(NULL /* security: handle not inherited */,
 						0 /* stack size:default */,
@@ -329,7 +859,7 @@ void listenerLoop()
 						param /* arguments */,
 						0 /* init flags:execute immediately */,
 						NULL /* thread id */);
-					if(h)
+					if (h)
 					{
 						signals.push_back(a);
 						handles.push_back(h);
@@ -340,132 +870,152 @@ void listenerLoop()
 			}
 			pos++;
 		}
-		
+
 		BOOL exit = FALSE;
-		
-        /* Current process returns 0 for PA_NewProcess */
-        PA_long32 currentProcessNumber = PA_GetCurrentProcessNumber();
-        
+
+		/* Current process returns 0 for PA_NewProcess */
+		PA_long32 currentProcessNumber = PA_GetCurrentProcessNumber();
+
 		do {
 			DWORD count = WaitForMultipleObjects(signals.size(), &signals[0], FALSE, 16);//1 tick = 0.0166666
 			switch (count)
 			{
-				case WAIT_TIMEOUT:
-					PA_YieldAbsolute();
-					/* process (queued) file drop events */
-					if (1)
+			case WAIT_TIMEOUT:
+				PA_YieldAbsolute();
+				/* process (queued) file drop events */
+				if (1)
+				{
+
+					if (MFD::CALLBACK_EVENT_PATHS.size())
 					{
-						if (MFD::CALLBACK_EVENT_PATHS.size())
-						{
-							listenerLoopExecuteMethod();
-						}
+						listenerLoopExecuteMethod();
 					}
-					PA_PutProcessToSleep(currentProcessNumber, CALLBACK_SLEEP_TIME);//59 ticks
-					break;
-				case WAIT_FAILED:
-					exit = TRUE;
-					break;
-				default:
-					for(DWORD i = count-WAIT_OBJECT_0; i < signals.size();++i)
+
+				}
+				PA_PutProcessToSleep(currentProcessNumber, CALLBACK_SLEEP_TIME);//59 ticks
+				break;
+			case WAIT_FAILED:
+				exit = TRUE;
+				break;
+			default:
+				for (DWORD i = count - WAIT_OBJECT_0; i < signals.size(); ++i)
+				{
+					HANDLE h = signals[i];
+					CUTF16String path = folderpaths[i];
+					ResetEvent(h);
+
+					DWORD data_len = 0;
+					DWORD len = sizeof(data_len);
+					BOOL success = FALSE;
+
+					HANDLE fmOut = CreateFileMapping(
+						INVALID_HANDLE_VALUE,
+						NULL,
+						PAGE_READWRITE,
+						0, len,
+						L"PARAM_OUT");
+
+					if (fmOut)
 					{
-						HANDLE h = signals[i];
-						CUTF16String path = folderpaths[i];
-						ResetEvent(h);
-						
-						DWORD data_len = 0;
-						DWORD len = sizeof(data_len);
-						BOOL success = FALSE;
-						
-						HANDLE fmOut = CreateFileMapping(
+						LPVOID bufOut = MapViewOfFile(fmOut, FILE_MAP_READ, 0, 0, len);
+						if (bufOut)
+						{
+							unsigned char *p = (unsigned char *)bufOut;
+							try
+							{
+								CopyMemory(&data_len, p, sizeof(data_len));
+								success = TRUE;
+							}
+							catch (...)
+							{
+
+							}
+							UnmapViewOfFile(bufOut);
+						}
+						CloseHandle(fmOut);
+					}
+					if ((success) && (data_len))
+					{
+						len = len + data_len;
+
+						fmOut = CreateFileMapping(
 							INVALID_HANDLE_VALUE,
 							NULL,
 							PAGE_READWRITE,
 							0, len,
 							L"PARAM_OUT");
-
 						if (fmOut)
 						{
 							LPVOID bufOut = MapViewOfFile(fmOut, FILE_MAP_READ, 0, 0, len);
 							if (bufOut)
 							{
 								unsigned char *p = (unsigned char *)bufOut;
+								p = p + sizeof(data_len);
 								try
 								{
-									CopyMemory(&data_len, p, sizeof(data_len));
-									success = TRUE;
-								}
-								catch (...)
-								{
-									
-								}
-								UnmapViewOfFile(bufOut);
-							}
-							CloseHandle(fmOut);
-						}
-						if ((success) && (data_len))
-						{
-							len = len + data_len;
-							
-							fmOut = CreateFileMapping(
-								INVALID_HANDLE_VALUE,
-								NULL,
-								PAGE_READWRITE,
-								0, len,
-								L"PARAM_OUT");
-							if (fmOut)
-							{
-								LPVOID bufOut = MapViewOfFile(fmOut, FILE_MAP_READ, 0, 0, len);
-								if (bufOut)
-								{
-									unsigned char *p = (unsigned char *)bufOut;
-									p = p + sizeof(data_len);
-									try
+									std::vector<uint8_t>buf(data_len);
+									CopyMemory(&buf[0], p, data_len);
+									size_t pos = 0;
+									FILE_NOTIFY_INFORMATION *fni = (FILE_NOTIFY_INFORMATION *)&buf[0];
+									size_t nextEntryOffset = fni->NextEntryOffset;
+									bool should_execute_method = false;
+
+									do
 									{
-										std::vector<uint8_t>buf(data_len);
-										CopyMemory(&buf[0], p, data_len);
-										size_t pos = 0;
-										FILE_NOTIFY_INFORMATION *fni = (FILE_NOTIFY_INFORMATION *)&buf[0];
-										size_t nextEntryOffset = fni->NextEntryOffset;
-										bool should_execute_method = false;
+										/* get full path */
+										DWORD fileNameLength = fni->FileNameLength;/* bytes */
+										std::vector<PA_Unichar>ubuf(fileNameLength + sizeof(PA_Unichar));
+										unsigned char *up = (unsigned char *)fni->FileName;
+										CopyMemory(&ubuf[0], up, fileNameLength);
+										CUTF16String event_path = path + CUTF16String((const PA_Unichar *)&ubuf[0]);
 
-										do
+										/* get file time */
+										if (0)
 										{
-											/* get full path */
-											DWORD fileNameLength = fni->FileNameLength;/* bytes */
-											std::vector<PA_Unichar>ubuf(fileNameLength + sizeof(PA_Unichar));
-											unsigned char *up = (unsigned char *)fni->FileName;
-											CopyMemory(&ubuf[0], up, fileNameLength);
-											CUTF16String event_path = path + CUTF16String((const PA_Unichar *)&ubuf[0]);
+											double t = 0;
+											FILETIME ft;
+											GetSystemTimeAsFileTime(&ft);
+											ULARGE_INTEGER ul;
+											ul.LowPart = ft.dwLowDateTime;
+											ul.HighPart = ft.dwHighDateTime;
+											double ts = (double)((ul.QuadPart - SECS_BETWEEN_1601_AND_1970_EPOCHS) / 10000);
+										}
 
-											/* get file time */
-											if (0)
+										bool is_good_event = false;
+
+										if (!PathIsDirectory((LPCTSTR)event_path.c_str()))
+										{
+											wchar_t	fDrive[_MAX_DRIVE], fDir[_MAX_DIR], fName[_MAX_FNAME], fExt[_MAX_EXT];
+											HMODULE hplugin = GetModuleHandleW(THIS_BUNDLE_NAME);
+											_wsplitpath_s((wchar_t *)event_path.c_str(), fDrive, fDir, fName, fExt);
+
+											if (!_wcsicmp(fExt, L".mht"))
 											{
-												double t = 0;
-												FILETIME ft;
-												GetSystemTimeAsFileTime(&ft);
-												ULARGE_INTEGER ul;
-												ul.LowPart = ft.dwLowDateTime;
-												ul.HighPart = ft.dwHighDateTime;
-												double ts = (double)((ul.QuadPart - SECS_BETWEEN_1601_AND_1970_EPOCHS) / 10000);
+												switch (fni->Action)
+												{
+												case FILE_ACTION_RENAMED_NEW_NAME:
+													is_good_event = true;
+													break;
+												case FILE_ACTION_MODIFIED:
+												case FILE_ACTION_ADDED:
+												case FILE_ACTION_REMOVED:
+												case FILE_ACTION_RENAMED_OLD_NAME:
+													break;
+												default:
+													break;
+												}
+
 											}
-
-											bool is_good_event = false;
-
-											if (!PathIsDirectory((LPCTSTR)event_path.c_str()))
-											{
-												wchar_t	fDrive[_MAX_DRIVE], fDir[_MAX_DIR], fName[_MAX_FNAME], fExt[_MAX_EXT];
-												HMODULE hplugin = GetModuleHandleW(THIS_BUNDLE_NAME);
-												_wsplitpath_s((wchar_t *)event_path.c_str(), fDrive, fDir, fName, fExt);
-
-												if (!_wcsicmp(fExt, L".mht"))
+											else
+												if (!_wcsicmp(fExt, L".msg"))
 												{
 													switch (fni->Action)
 													{
 													case FILE_ACTION_RENAMED_NEW_NAME:
+													case FILE_ACTION_ADDED:
 														is_good_event = true;
 														break;
 													case FILE_ACTION_MODIFIED:
-													case FILE_ACTION_ADDED:
 													case FILE_ACTION_REMOVED:
 													case FILE_ACTION_RENAMED_OLD_NAME:
 														break;
@@ -473,123 +1023,107 @@ void listenerLoop()
 														break;
 													}
 
-												}else
-													if (!_wcsicmp(fExt, L".msg"))
-													{
-														switch (fni->Action)
-														{
-														case FILE_ACTION_RENAMED_NEW_NAME:
-														case FILE_ACTION_ADDED:
-															is_good_event = true;
-															break;
-														case FILE_ACTION_MODIFIED:
-														case FILE_ACTION_REMOVED:
-														case FILE_ACTION_RENAMED_OLD_NAME:
-															break;
-														default:
-															break;
-														}
+												}
+										}
 
-													}
-											}
-
-											if (is_good_event)
+										if (is_good_event)
+										{
+											if (!PathIsDirectory((LPCTSTR)event_path.c_str()))
 											{
-												if (!PathIsDirectory((LPCTSTR)event_path.c_str()))
+												bool is_good_name = false;
+												is_good_name = (event_path.find((PA_Unichar *)L"~$") != 0);
+												if (is_good_name)
 												{
-													bool is_good_name = false;
-													is_good_name = (event_path.find((PA_Unichar *)L"~$") != 0);
-													if (is_good_name)
-													{
-														should_execute_method = true;
+													should_execute_method = true;
 
-														std::lock_guard<std::mutex> lock(globalMutex);
+													std::lock_guard<std::mutex> lock(globalMutex);
 
-														MFD::CALLBACK_EVENT_PATHS.push_back(event_path);
-													}												
+													MFD::CALLBACK_EVENT_PATHS.push_back(event_path);
 												}
 											}
-
-											nextEntryOffset = fni->NextEntryOffset;
-											pos += nextEntryOffset;
-
-											fni = (FILE_NOTIFY_INFORMATION *)&buf.at(pos);
-
-										} while (nextEntryOffset);
-
-										if (should_execute_method)
-										{
-											/* execute callback method */
-											listenerLoopExecuteMethod();
 										}
-										
-									}
-									catch (...)
+
+										nextEntryOffset = fni->NextEntryOffset;
+										pos += nextEntryOffset;
+
+										fni = (FILE_NOTIFY_INFORMATION *)&buf.at(pos);
+
+									} while (nextEntryOffset);
+
+									if (should_execute_method)
 									{
-										
+										/* execute callback method */
+										listenerLoopExecuteMethod();
 									}
-									UnmapViewOfFile(bufOut);
+
 								}
-								CloseHandle(fmOut);
+								catch (...)
+								{
+
+								}
+								UnmapViewOfFile(bufOut);
 							}
-							
+							CloseHandle(fmOut);
 						}
-						
-						CUTF16String antisignalname = antisignalnames.at(i);
-						
-						HANDLE antisignal = OpenEvent(EVENT_ALL_ACCESS, FALSE, (LPCWSTR)antisignalname.c_str());
-						if(antisignal)
-						{
-							SetEvent(antisignal);
-							CloseHandle(antisignal);
-						}
+
 					}
-					break;
-			}
-			
+
+					CUTF16String antisignalname = antisignalnames.at(i);
+
+					HANDLE antisignal = OpenEvent(EVENT_ALL_ACCESS, FALSE, (LPCWSTR)antisignalname.c_str());
+					if (antisignal)
+					{
+						SetEvent(antisignal);
+						CloseHandle(antisignal);
+					}
+				}
+				break;
+					}
+
 			if (MFD::MONITOR_PROCESS_SHOULD_TERMINATE) exit = TRUE;
-			
-		} while (!exit);
-		
-		/* release signal handles */
-		for(it = signals.begin(); it != signals.end(); ++it)
-		{
-			HANDLE h = *it;
-			if(h != INVALID_HANDLE_VALUE)
-			{
-				CloseHandle(h);
+
+				} while (!exit);
+
+				/* release signal handles */
+				for (it = signals.begin(); it != signals.end(); ++it)
+				{
+					HANDLE h = *it;
+					if (h != INVALID_HANDLE_VALUE)
+					{
+						CloseHandle(h);
+					}
+				}
+
+				/* release thread handles */
+				for (it = handles.begin(); it != handles.end(); ++it)
+				{
+					HANDLE h = *it;
+					if (h != INVALID_HANDLE_VALUE)
+					{
+						CloseHandle(h);
+					}
+				}
 			}
-		}
-		
-		/* release thread handles */
-		for (it = handles.begin(); it != handles.end(); ++it)
-		{
-			HANDLE h = *it;
-			if (h != INVALID_HANDLE_VALUE)
-			{
-				CloseHandle(h);
-			}
-		}
-	}
-	
+
 	/* release path handles */
-	for(it = watch_path_handles.begin(); it != watch_path_handles.end(); ++it)
+	for (it = watch_path_handles.begin(); it != watch_path_handles.end(); ++it)
 	{
 		HANDLE h = *it;
-		if(h != INVALID_HANDLE_VALUE)
+		if (h != INVALID_HANDLE_VALUE)
 		{
 			CloseHandle(h);/* this will end the thread via bytesReturned == 0 */
 		}
 	}
 #endif
-	
-	if(1)
+
+	if (1)
 	{
 		std::lock_guard<std::mutex> lock(globalMutex);
 
 		MFD::CALLBACK_EVENT_PATHS.clear();
 	}
-    
+#endif
+
     if(1)
     {
         std::lock_guard<std::mutex> lock(globalMutex1);
@@ -615,6 +1149,19 @@ void listenerLoopStart()
 		listenerLoopFinish();
 	}
 
+}
+
+void listenerLoopFinishGracefully() {
+	if (MFD::METHOD_PROCESS_ID)
+	{
+		if (1)
+		{
+			std::lock_guard<std::mutex> lock(globalMutex4);
+
+			MFD::PROCESS_SHOULD_RESUME = true;
+		}
+		PA_YieldAbsolute();
+	}
 }
 
 void listenerLoopFinish()
@@ -658,27 +1205,62 @@ void listenerLoopExecute()
 
 void listenerLoopExecuteMethod()
 {
-    CUTF16String event_path;
-    
+#if NO_FOLDER_WATCH
+	CUTF16String htmlBody, mhtPath, msgPath;
+#else
+	CUTF16String event_path;
+#endif
     if(1)
     {
         std::lock_guard<std::mutex> lock(globalMutex);
         
-        std::vector<CUTF16String>::iterator p = MFD::CALLBACK_EVENT_PATHS.begin();
-        
-        event_path = *p;
-     
-        MFD::CALLBACK_EVENT_PATHS.erase(p);
+#if NO_FOLDER_WATCH
+		std::vector<CUTF16String>::iterator p = MFD::CALLBACK_HTMLBODY.begin();
+
+		htmlBody = *p;
+		MFD::CALLBACK_HTMLBODY.erase(p);
+
+		p = MFD::CALLBACK_MHT.begin();
+
+		mhtPath = *p;
+		MFD::CALLBACK_MHT.erase(p);
+
+		p = MFD::CALLBACK_MSG.begin();
+
+		msgPath = *p;
+		MFD::CALLBACK_MSG.erase(p);
+#else
+		std::vector<CUTF16String>::iterator p = MFD::CALLBACK_EVENT_PATHS.begin();
+
+		event_path = *p;
+		MFD::CALLBACK_EVENT_PATHS.erase(p);
+#endif
+
     }
 
 	method_id_t methodId = PA_GetMethodID((PA_Unichar *)MFD::LISTENER_METHOD.getUTF16StringPtr());
 	
 	if(methodId)
 	{
-		PA_Variable	params[2];
+		PA_Variable	params[4];
 		params[0] = PA_CreateVariable(eVK_Unistring);
 		params[1] = PA_CreateVariable(eVK_Unistring);
-		
+		params[2] = PA_CreateVariable(eVK_Unistring);
+		params[3] = PA_CreateVariable(eVK_Unistring);
+
+#if NO_FOLDER_WATCH
+		PA_Unistring body = PA_CreateUnistring((PA_Unichar *)htmlBody.c_str());
+		PA_Unistring mht = PA_CreateUnistring((PA_Unichar *)mhtPath.c_str());
+		PA_Unistring msg = PA_CreateUnistring((PA_Unichar *)msgPath.c_str());
+		PA_Unistring context = PA_CreateUnistring((PA_Unichar *)MFD::WATCH_CONTEXT.getUTF16StringPtr());
+
+		PA_SetStringVariable(&params[0], &body);
+		PA_SetStringVariable(&params[1], &mht);
+		PA_SetStringVariable(&params[2], &msg);
+		PA_SetStringVariable(&params[3], &context);
+
+		PA_ExecuteMethodByID(methodId, params, 4);
+#else
 		PA_Unistring path = PA_CreateUnistring((PA_Unichar *)event_path.c_str());
 		PA_Unistring context = PA_CreateUnistring((PA_Unichar *)MFD::WATCH_CONTEXT.getUTF16StringPtr());
 
@@ -686,31 +1268,52 @@ void listenerLoopExecuteMethod()
 		PA_SetStringVariable(&params[1], &context);
 
 		PA_ExecuteMethodByID(methodId, params, 2);
-		
+#endif
+
 		PA_ClearVariable(&params[0]);
 		PA_ClearVariable(&params[1]);
+		PA_ClearVariable(&params[2]);
 
 	}else
 	{
-		PA_Variable	params[3];
+		PA_Variable	params[5];
 		params[1] = PA_CreateVariable(eVK_Unistring);
 		params[2] = PA_CreateVariable(eVK_Unistring);
+		params[3] = PA_CreateVariable(eVK_Unistring);
+		params[4] = PA_CreateVariable(eVK_Unistring);
 
+#if NO_FOLDER_WATCH
+		PA_Unistring body = PA_CreateUnistring((PA_Unichar *)htmlBody.c_str());
+		PA_Unistring mht = PA_CreateUnistring((PA_Unichar *)mhtPath.c_str());
+		PA_Unistring msg = PA_CreateUnistring((PA_Unichar *)msgPath.c_str());
+		PA_Unistring context = PA_CreateUnistring((PA_Unichar *)MFD::WATCH_CONTEXT.getUTF16StringPtr());
+
+		PA_SetStringVariable(&params[1], &body);
+		PA_SetStringVariable(&params[2], &mht);
+		PA_SetStringVariable(&params[3], &msg);
+		PA_SetStringVariable(&params[4], &context);
+#else
 		PA_Unistring path = PA_CreateUnistring((PA_Unichar *)event_path.c_str());
 		PA_Unistring context = PA_CreateUnistring((PA_Unichar *)MFD::WATCH_CONTEXT.getUTF16StringPtr());
 
 		PA_SetStringVariable(&params[1], &path);
 		PA_SetStringVariable(&params[2], &context);
-		
+#endif
+
 		params[0] = PA_CreateVariable(eVK_Unistring);
 		PA_Unistring method = PA_CreateUnistring((PA_Unichar *)MFD::LISTENER_METHOD.getUTF16StringPtr());
 		PA_SetStringVariable(&params[0], &method);
-		
+
+#if NO_FOLDER_WATCH		
+		PA_ExecuteCommandByID(1007, params, 4);
+#else
 		PA_ExecuteCommandByID(1007, params, 2);
-		
+#endif
 		PA_ClearVariable(&params[0]);
 		PA_ClearVariable(&params[1]);
 		PA_ClearVariable(&params[2]);
+		PA_ClearVariable(&params[3]);
+		PA_ClearVariable(&params[4]);
 	}
 }
 
@@ -730,10 +1333,13 @@ private:
 	UINT m_cfFormatRPItem;
 	UINT m_cfFormatRPMessages;
 	UINT m_cfFormatRPLatestMessages;
-	
-		std::wstring m_ScriptPath;
-		std::wstring m_ExportPath;
-	
+		
+#if NO_FOLDER_WATCH
+#else	
+
+	std::wstring m_ScriptPath;
+	std::wstring m_ExportPath;
+
 	void getTempPath(std::wstring &path)
 	{
 		std::vector<wchar_t>buf(MAX_PATH + 1);
@@ -776,7 +1382,7 @@ private:
 		path += uuid;
 		path += L"\\";
 	}
-	
+		
 	void getExportPath(std::wstring &path)
 	{
 		std::wstring uuid;
@@ -790,7 +1396,8 @@ private:
 		path+= uuid;
 		path+= L"\"";
 	}
-	
+#endif
+
 	bool isFileDrop(IDataObject *pDataObj, FORMATETC *formatetc) {
 			
 		formatetc->cfFormat = CF_HDROP;
@@ -857,15 +1464,17 @@ private:
 			m_cfFormatRPItem = RegisterClipboardFormat(L"RenPrivateItem");
 			m_cfFormatRPMessages = RegisterClipboardFormat(L"RenPrivateMessages");
 			m_cfFormatRPLatestMessages = RegisterClipboardFormat(L"RenPrivateLatestMessages");
-			
-			getScriptPath(m_ScriptPath);
 
+#if NO_FOLDER_WATCH
+#else			
+			getScriptPath(m_ScriptPath);
 			/* create root folder here (script creates only 1 level for each drag and drop) */
-			getExportRootPath(m_ExportPath);			
+			getExportRootPath(m_ExportPath);
 			SHCreateDirectory(NULL, (PCWSTR)m_ExportPath.c_str());
 
 			MFD::WATCH_PATHS.setSize(0);
 			MFD::WATCH_PATHS.appendUTF16String((const PA_Unichar *)m_ExportPath.c_str());
+#endif
 		}
 	
 		MyDropTarget::~MyDropTarget() {}
@@ -932,45 +1541,52 @@ private:
 		DWORD       *pdwEffect
 	)
 	{		
-		FORMATETC formatetc;
-		if (this->isFileDrop(pDataObj, &formatetc))
-		{
-			if (S_OK == pDataObj->QueryGetData(&formatetc))
-			{
-				STGMEDIUM stm = {};
-				if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm)))
-				{
-					HDROP hDrop = static_cast<HDROP>(GlobalLock(stm.hGlobal));
-					if (hDrop != NULL)
-					{
-						UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
-						if (nFiles != 0)
-						{
-							for (UINT i = 0; i < nFiles; ++i)
-							{
-								size_t len = DragQueryFile(hDrop, i, NULL, 0);
-								len++;
-								std::vector<unsigned char>buf((len)*sizeof(wchar_t));
-								if (DragQueryFile(hDrop, i, (LPTSTR)&buf[0], len))
-								{
-									std::lock_guard<std::mutex> lock(globalMutex);
-
-									MFD::CALLBACK_EVENT_PATHS.push_back(CUTF16String((const PA_Unichar *)&buf[0], len));
-								}
-							}
-						}
-						return S_OK;
-					}
-				}
-			}
-		}
 
 		if (this->isOutlookDrop(pDataObj))
 		{
-			std::wstring path;
-			getExportPath(path);
-			ShellExecute(NULL, L"open", L"cscript.exe", path.c_str(), NULL, SW_HIDE);
+			//std::wstring path;
+			//getExportPath(path);
+			//ShellExecute(NULL, L"open", L"cscript.exe", path.c_str(), NULL, SW_HIDE);
+
+			outlook_export_selected_messages();
 			return S_OK;
+		}
+		else {
+#if NO_FOLDER_WATCH
+#else
+			FORMATETC formatetc;
+			if (this->isFileDrop(pDataObj, &formatetc))
+			{
+				if (S_OK == pDataObj->QueryGetData(&formatetc))
+				{
+					STGMEDIUM stm = {};
+					if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm)))
+					{
+						HDROP hDrop = static_cast<HDROP>(GlobalLock(stm.hGlobal));
+						if (hDrop != NULL)
+						{
+							UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+							if (nFiles != 0)
+							{
+								for (UINT i = 0; i < nFiles; ++i)
+								{
+									size_t len = DragQueryFile(hDrop, i, NULL, 0);
+									len++;
+									std::vector<unsigned char>buf((len) * sizeof(wchar_t));
+									if (DragQueryFile(hDrop, i, (LPTSTR)&buf[0], len))
+									{
+										std::lock_guard<std::mutex> lock(globalMutex);
+
+										MFD::CALLBACK_EVENT_PATHS.push_back(CUTF16String((const PA_Unichar *)&buf[0], len));
+									}
+								}
+							}
+							return S_OK;
+						}
+					}
+				}
+			}
+#endif
 		}
 		
 		return S_OK;
@@ -1027,29 +1643,47 @@ void ACCEPT_MESSAGE_FILES(sLONG_PTR *pResult, PackagePtr pParams)
 #if VERSIONWIN
 	if(!IsProcessOnExit())
 	{
-        if(1)
-        {
-            std::lock_guard<std::mutex> lock(globalMutex2);
-            
-            MFD::LISTENER_METHOD.fromParamAtIndex(pParams, 2);
-            MFD::WATCH_CONTEXT.fromParamAtIndex(pParams, 3);
-        }
-        
-		HWND hwnd = (HWND)PA_GetHWND((PA_WindowRef)Param1_window.getIntValue());
-		
-		if(hwnd)
+		int arg = Param1_window.getIntValue();
+
+		if (arg == 0)
 		{
-			g_MyDropTarget.Register(hwnd);
-			
-			listenerLoopStart();
-		}
-		else
+			if (1)
+			{
+				std::lock_guard<std::mutex> lock(globalMutex2);
+
+				MFD::LISTENER_METHOD.fromParamAtIndex(pParams, 2);
+				MFD::WATCH_CONTEXT.fromParamAtIndex(pParams, 3);
+			}
+
+			g_MyDropTarget.Unregister();
+
+			listenerLoopFinish();
+		}else
+
+		if (arg == -1)
 		{
 			g_MyDropTarget.Unregister();
 
-			listenerLoopFinish(); 
+			listenerLoopFinishGracefully();
 		}
-	
+		else {
+			
+			HWND hwnd = (HWND)PA_GetHWND(reinterpret_cast<PA_WindowRef>(arg));
+			if (hwnd)
+			{
+				if (1)
+				{
+					std::lock_guard<std::mutex> lock(globalMutex2);
+
+					MFD::LISTENER_METHOD.fromParamAtIndex(pParams, 2);
+					MFD::WATCH_CONTEXT.fromParamAtIndex(pParams, 3);
+				}
+				g_MyDropTarget.Register(hwnd);
+
+				listenerLoopStart();
+			}
+		}
+
 	}/* IsProcessOnExit */
 #endif
 }
