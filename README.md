@@ -34,7 +34,11 @@ The plugin is monitoring the temporary folder in a background thread. The specif
 
 ---
 
-#### Technical Details
+#### Technical Details 
+
+T.B.C. 
+
+#### Technical Details (previously)
 
 When Outlook exports an email in  ``.mht`` format, several file system events are generated:
 
