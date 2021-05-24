@@ -1553,6 +1553,48 @@ private:
 		}
 		else {
 #if NO_FOLDER_WATCH
+			FORMATETC formatetc;
+			if (this->isFileDrop(pDataObj, &formatetc))
+			{
+				if (S_OK == pDataObj->QueryGetData(&formatetc))
+				{
+					STGMEDIUM stm = {};
+					if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm)))
+					{
+						HDROP hDrop = static_cast<HDROP>(GlobalLock(stm.hGlobal));
+						if (hDrop != NULL)
+						{
+							UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+							if (nFiles != 0)
+							{
+								for (UINT i = 0; i < nFiles; ++i)
+								{
+									size_t len = DragQueryFile(hDrop, i, NULL, 0);
+									len++;
+									std::vector<unsigned char>buf((len) * sizeof(wchar_t));
+									if (DragQueryFile(hDrop, i, (LPTSTR)&buf[0], len))
+									{
+										std::lock_guard<std::mutex> lock(globalMutex);
+
+										MFD::CALLBACK_HTMLBODY.push_back(CUTF16String((const PA_Unichar *)&buf[0], len));
+
+										CUTF16String msgPath, mhtPath;
+										MFD::CALLBACK_MHT.push_back(mhtPath);//empty
+										MFD::CALLBACK_MSG.push_back(msgPath);//empty
+									}
+								}
+								if (1)
+								{
+									std::lock_guard<std::mutex> lock(globalMutex4);
+
+									MFD::PROCESS_SHOULD_RESUME = true;
+								}
+							}
+						}
+					}
+				}
+			}
+
 #else
 			FORMATETC formatetc;
 			if (this->isFileDrop(pDataObj, &formatetc))

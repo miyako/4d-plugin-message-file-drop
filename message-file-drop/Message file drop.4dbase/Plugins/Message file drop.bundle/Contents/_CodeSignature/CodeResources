@@ -100,7 +100,7 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			LkLkVJOrkkYVFxb9qrtfeXHPSmc=
+			AfwGk1L3P/VY5No+vRhe1qnAamA=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -109,9 +109,9 @@
 		<data>
 		UbZYnK1QdI2HA5cO0/aNT2a+ucQ=
 		</data>
-		<key>Resources/manifest.json</key>
+		<key>Resources/outlook_export_selected_messages.vbs</key>
 		<data>
-		0pdTWX0OUDuFCgCs/cK7Xxdy25U=
+		nEzFesm7DNdnSEZ7Z+kFU2rnV68=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -288,7 +288,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			QjbqU5IRNbLPDlc+G6qvnLPBnQDBSKGHUcNtve9iEm0=
+			rt7GanML6cmt7VsDYPPfqGx4tjtGdyHiD2rnGJ2+zPI=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -300,19 +300,28 @@
 			7t2nF9u/4W05GOd8UQ7QAt/PFge16k3ydWYX/6ElmJk=
 			</data>
 		</dict>
-		<key>Resources/manifest.json</key>
+		<key>Resources/outlook_export_selected_messages.vbs</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			9wDrDfZyhI7sKHe6HDpA5Xr7dTquQ/qIktXx24Slczk=
+			XkAJK98CPDev7VDaEYnu5MrnKkR8O7C8QHmGfVgEHDQ=
 			</data>
 		</dict>
 		<key>Windows64/Message file drop.4DX</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			259jITmQoU6sNrx0VF08Zo5Vz+tSUspynMDRkPmIDbA=
+			A+B7z4O7boBf8LhStlZ4fTlvrs8DYtQhKLt1vVTb1ZM=
 			</data>
+		</dict>
+		<key>manifest.json</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			FooLAD0r5jC2C+gkdDyYfPvVDNs=
+			</data>
+			<key>requirement</key>
+			<string>identifier manifest and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = Y69CWUC25B</string>
 		</dict>
 	</dict>
 	<key>rules</key>
