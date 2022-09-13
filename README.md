@@ -6,8 +6,6 @@ Accept drag and drop of messages from Microsoft Outlook
 [![license](https://img.shields.io/github/license/miyako/4d-plugin-message-file-drop)](LICENSE)
 ![downloads](https://img.shields.io/github/downloads/miyako/4d-plugin-message-file-drop/total)
 
-**Note**: for v17 and earlier, move `manifest.json` to `Contents`
-
 **A similar solution for Mac is available**: [apple-file-promises](https://github.com/miyako/4d-plugin-apple-file-promises)
 
 ## Syntax
