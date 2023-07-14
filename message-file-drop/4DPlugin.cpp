@@ -1333,6 +1333,7 @@ private:
 	UINT m_cfFormatRPItem;
 	UINT m_cfFormatRPMessages;
 	UINT m_cfFormatRPLatestMessages;
+	UINT m_cfFormatFileContents;
 		
 #if NO_FOLDER_WATCH
 #else	
@@ -1412,17 +1413,15 @@ private:
 		return false;
 	}
 	
-	bool isFilePromiseDrop(IDataObject *pDataObj) {
+	bool isFilePromiseDrop(IDataObject *pDataObj, FORMATETC *formatetc) {
+				
+		formatetc->cfFormat = m_cfFormatFileDescriptor;
+		formatetc->ptd = NULL;
+		formatetc->dwAspect = DVASPECT_CONTENT;
+		formatetc->lindex = -1;
+		formatetc->tymed = TYMED_HGLOBAL;
 		
-		FORMATETC formatetc;
-		
-		formatetc.cfFormat = m_cfFormatFileDescriptor;
-		formatetc.ptd = NULL;
-		formatetc.dwAspect = DVASPECT_CONTENT;
-		formatetc.lindex = -1;
-		formatetc.tymed = TYMED_HGLOBAL;
-		
-		if (S_OK == pDataObj->QueryGetData(&formatetc))
+		if (S_OK == pDataObj->QueryGetData(formatetc))
 			return true;
 		
 		return false;
@@ -1464,6 +1463,7 @@ private:
 			m_cfFormatRPItem = RegisterClipboardFormat(L"RenPrivateItem");
 			m_cfFormatRPMessages = RegisterClipboardFormat(L"RenPrivateMessages");
 			m_cfFormatRPLatestMessages = RegisterClipboardFormat(L"RenPrivateLatestMessages");
+			m_cfFormatFileContents = RegisterClipboardFormat(CFSTR_FILECONTENTS);
 
 #if NO_FOLDER_WATCH
 #else			
@@ -1513,6 +1513,12 @@ private:
 			return S_OK;
 		}
 
+		if (this->isFilePromiseDrop(pDataObj, &formatetc))
+		{
+			//*pdwEffect = DROPEFFECT_COPY;
+			return S_OK;
+		}
+
 		if (this->isOutlookDrop(pDataObj))
 		{
 			//*pdwEffect = DROPEFFECT_COPY;
@@ -1541,8 +1547,87 @@ private:
 		DWORD       *pdwEffect
 	)
 	{		
+		std::wstring tempFolder;
+		getTempFolder(tempFolder);
 
-		if (this->isOutlookDrop(pDataObj))
+		FORMATETC formatetc;
+
+		if (this->isFilePromiseDrop(pDataObj, &formatetc))
+		{
+			if (S_OK == pDataObj->QueryGetData(&formatetc))
+			{
+				STGMEDIUM stm = {};
+				if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm)))
+				{
+					LPFILEGROUPDESCRIPTOR pFileGroupDescriptor = static_cast<LPFILEGROUPDESCRIPTOR>(GlobalLock(stm.hGlobal));
+					if (pFileGroupDescriptor != NULL)
+					{
+						UINT nFiles = pFileGroupDescriptor->cItems;
+
+						if (nFiles != 0)
+						{
+							LPFILEDESCRIPTOR pFileDescriptor = pFileGroupDescriptor->fgd;
+							for (UINT i = 0; i < nFiles; ++i)
+							{
+
+								WCHAR *fileName = pFileDescriptor->cFileName;
+								std::wstring tempFile = tempFolder + fileName;
+
+								formatetc.cfFormat = m_cfFormatFileContents;
+								formatetc.ptd = NULL;
+								formatetc.dwAspect = DVASPECT_CONTENT;
+								formatetc.lindex = i;
+								formatetc.tymed =TYMED_ISTREAM;
+
+								STGMEDIUM stm2 = {};
+
+								BOOL test = pDataObj->GetData(&formatetc, &stm2);
+
+								if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm2)))
+								{
+									if (stm2.pstm != NULL)
+									{
+										size_t bufSize = 8192;
+										ULONG bytesRead = 0;
+										std::vector<unsigned char>buf(bufSize);
+										FILE *f = _wfopen(tempFile.c_str(), L"wb");
+										if (f != NULL)
+										{
+											while (1)
+											{
+												stm2.pstm->Read(&buf[0], bufSize, &bytesRead);
+												fwrite(&buf[0], bytesRead, sizeof(unsigned char), f);
+												if (bytesRead < bufSize) break;
+											}
+											fclose(f);
+
+											std::lock_guard<std::mutex> lock(globalMutex);
+
+											MFD::CALLBACK_HTMLBODY.push_back(CUTF16String((const PA_Unichar *)tempFile.c_str(), tempFile.length()));
+
+											CUTF16String msgPath, mhtPath;
+											MFD::CALLBACK_MHT.push_back(mhtPath);//empty
+											MFD::CALLBACK_MSG.push_back(msgPath);//empty
+										}
+									}
+								}
+
+								pFileDescriptor++;
+							}
+						}
+						if (1)
+						{
+							std::lock_guard<std::mutex> lock(globalMutex4);
+
+							MFD::PROCESS_SHOULD_RESUME = true;
+						}
+					}
+					GlobalUnlock(stm.hGlobal);
+				}
+			}
+		}
+
+		else if (this->isOutlookDrop(pDataObj))
 		{
 			//std::wstring path;
 			//getExportPath(path);
@@ -1553,7 +1638,7 @@ private:
 		}
 		else {
 #if NO_FOLDER_WATCH
-			FORMATETC formatetc;
+			
 			if (this->isFileDrop(pDataObj, &formatetc))
 			{
 				if (S_OK == pDataObj->QueryGetData(&formatetc))
@@ -1591,6 +1676,7 @@ private:
 								}
 							}
 						}
+						GlobalUnlock(stm.hGlobal);
 					}
 				}
 			}
