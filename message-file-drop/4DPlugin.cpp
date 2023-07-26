@@ -506,7 +506,8 @@ void getEnumFile(const wchar_t *folder, long index, const wchar_t *extension, CU
 	path += (const PA_Unichar *)extension;
 }
 
-void outlook_export_selected_messages(){
+HRESULT outlook_export_selected_messages(){
+	bool didReceiveItem = false;
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (SUCCEEDED(hr)) {
         IDispatch *pDispatch = get_outlook_application();
@@ -548,17 +549,11 @@ void outlook_export_selected_messages(){
 										MFD::CALLBACK_MHT.push_back(mhtPath);
 										MFD::CALLBACK_MSG.push_back(msgPath);
 
+										didReceiveItem = true;
 									}
                                 }
                             }
                         }
-
-						if (1)
-						{
-							std::lock_guard<std::mutex> lock(globalMutex4);
-
-							MFD::PROCESS_SHOULD_RESUME = true;
-						}
                     }
                 }
             }
@@ -567,7 +562,7 @@ void outlook_export_selected_messages(){
         }
         CoUninitialize();
     }
-    
+	return didReceiveItem;
 }
 #endif
 
@@ -1086,6 +1081,8 @@ private:
 		DWORD       *pdwEffect
 	)
 	{		
+		bool didReceiveItem = false;
+
 		std::wstring tempFolder;
 		getTempFolder(tempFolder);
 
@@ -1093,8 +1090,6 @@ private:
 
 		if (this->isFilePromiseDrop(pDataObj, &formatetc))
 		{
-			bool didReceiveItem = false;
-
 			if (S_OK == pDataObj->QueryGetData(&formatetc))
 			{
 				STGMEDIUM stm = {};
@@ -1108,74 +1103,85 @@ private:
 						if (nFiles != 0)
 						{
 							LPFILEDESCRIPTOR pFileDescriptor = pFileGroupDescriptor->fgd;
-							for (UINT i = 0; i < nFiles; ++i)
+
+							WCHAR *fileName = pFileDescriptor->cFileName;
+							std::wstring tempFile = tempFolder + fileName;
+
+							FORMATETC formatetc0;
+
+							formatetc0.cfFormat = m_cfFormatRPMessages;
+							formatetc0.ptd = NULL;
+							formatetc0.dwAspect = DVASPECT_CONTENT;
+							formatetc0.lindex = -1;
+							formatetc0.tymed = TYMED_ISTREAM;
+
+							STGMEDIUM stm0 = {};
+
+							if (S_OK != pDataObj->GetData(&formatetc0, &stm0))
 							{
-
-								WCHAR *fileName = pFileDescriptor->cFileName;
-								std::wstring tempFile = tempFolder + fileName;
-
-								formatetc.cfFormat = m_cfFormatFileContents;
-								formatetc.ptd = NULL;
-								formatetc.dwAspect = DVASPECT_CONTENT;
-								formatetc.lindex = i;
-								formatetc.tymed =TYMED_ISTREAM;
-
-								STGMEDIUM stm2 = {};
-
-								BOOL test = pDataObj->GetData(&formatetc, &stm2);
-
-								if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm2)))
+								for (UINT i = 0; i < nFiles; ++i)
 								{
-									if (stm2.pstm != NULL)
+									WCHAR *fileName = pFileDescriptor->cFileName;
+									std::wstring tempFile = tempFolder + fileName;
+
+									FORMATETC formatetc2;
+
+									formatetc2.cfFormat = m_cfFormatFileContents;
+									formatetc2.ptd = NULL;
+									formatetc2.dwAspect = DVASPECT_CONTENT;
+									formatetc2.lindex = -1;// i;
+									formatetc2.tymed = TYMED_ISTREAM;
+
+									STGMEDIUM stm2 = {};
+
+									if (SUCCEEDED(pDataObj->GetData(&formatetc2, &stm2)))
 									{
-										size_t bufSize = 8192;
-										ULONG bytesRead = 0;
-										std::vector<unsigned char>buf(bufSize);
-										FILE *f = _wfopen(tempFile.c_str(), L"wb");
-										if (f != NULL)
+										if (stm2.pstm != NULL)
 										{
-											while (1)
+											size_t bufSize = 8192;
+											ULONG bytesRead = 0;
+											std::vector<unsigned char>buf(bufSize);
+											FILE *f = _wfopen(tempFile.c_str(), L"wb");
+											if (f != NULL)
 											{
-												stm2.pstm->Read(&buf[0], bufSize, &bytesRead);
-												fwrite(&buf[0], bytesRead, sizeof(unsigned char), f);
-												if (bytesRead < bufSize) break;
+												while (1)
+												{
+													stm2.pstm->Read(&buf[0], bufSize, &bytesRead);
+													fwrite(&buf[0], bytesRead, sizeof(unsigned char), f);
+													if (bytesRead < bufSize) break;
+												}
+												fclose(f);
+
+												std::lock_guard<std::mutex> lock(globalMutex);
+
+												MFD::CALLBACK_HTMLBODY.push_back(CUTF16String((const PA_Unichar *)tempFile.c_str(), tempFile.length()));
+
+												CUTF16String msgPath, mhtPath;
+												MFD::CALLBACK_MHT.push_back(mhtPath);//empty
+												MFD::CALLBACK_MSG.push_back(msgPath);//empty
+
+												didReceiveItem = true;
 											}
-											fclose(f);
-
-											std::lock_guard<std::mutex> lock(globalMutex);
-
-											MFD::CALLBACK_HTMLBODY.push_back(CUTF16String((const PA_Unichar *)tempFile.c_str(), tempFile.length()));
-
-											CUTF16String msgPath, mhtPath;
-											MFD::CALLBACK_MHT.push_back(mhtPath);//empty
-											MFD::CALLBACK_MSG.push_back(msgPath);//empty
-
-											didReceiveItem = true;
 										}
 									}
+
+									pFileDescriptor++;
 								}
-								
-								pFileDescriptor++;
+
 							}
 						}
 					}
 					GlobalUnlock(stm.hGlobal);
 				}
 			}
+		}
 
-			if (didReceiveItem)
-			{
-				if (1)
-				{
-					std::lock_guard<std::mutex> lock(globalMutex4);
-
-					MFD::PROCESS_SHOULD_RESUME = true;
-				}
-				return S_OK;
-			}
+		if ((!didReceiveItem) && (this->isOutlookDrop(pDataObj)))
+		{
+			didReceiveItem = outlook_export_selected_messages();
 		}
 		
-		if (this->isFileDrop(pDataObj, &formatetc))
+		if ((!didReceiveItem) && (this->isFileDrop(pDataObj, &formatetc)))
 		{
 			bool didReceiveItem = false;
 
@@ -1226,10 +1232,11 @@ private:
 			}
 		}
 
-		if (this->isOutlookDrop(pDataObj))
+		if (didReceiveItem)
 		{
-			outlook_export_selected_messages();
-			return S_OK;
+			std::lock_guard<std::mutex> lock(globalMutex4);
+
+			MFD::PROCESS_SHOULD_RESUME = true;
 		}
 
 		return S_OK;

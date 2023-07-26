@@ -24,7 +24,7 @@
 #include <vector>
 #include <iomanip>
 #include "ichigocomhelper.h"
-void outlook_export_selected_messages();
+HRESULT outlook_export_selected_messages();
 #endif
 
 #include <mutex>
