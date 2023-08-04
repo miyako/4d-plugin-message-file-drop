@@ -100,7 +100,7 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			HbtPtRvUkBwufPrZgHTV/3k1yFs=
+			qnFW6hMgLJydodOGelJxwV6uYnU=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -292,7 +292,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			BjT2ODjPWML6SloH6tuWafcjcgAIfFu2af9cheMDZk8=
+			vs39SjSAiVrOsRdcFHl2MD1iH0vJvK7LE1JcM5i29kY=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -322,7 +322,28 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			RUXIZQYs17DVWfT8jHSx9aKw7d0qi9RW6RF0AubXy40=
+			dpkqmUpnZI6wo5JoQSdAitTYC4ES/YanbZr3KLqBFdg=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.exp</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			DkBaOAXeGmnPbN9Ud8QY8n9s/nXfcZc3RW2Bi+SGwhg=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.lib</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			2/+xD43KTT2n1YqufPD2yMCxzrwwjuxUsMK63LKDavs=
+			</data>
+		</dict>
+		<key>Windows64/Message file drop.pdb</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			hEeXo8nzGoemxyp3FLz8MgRwpKVKx6y1iLEmMevo2b4=
 			</data>
 		</dict>
 	</dict>
