@@ -1,1 +1,3 @@
 message-file-drop/build/*
+message-file-drop/Objs/*
+message-file-drop/.vs/*

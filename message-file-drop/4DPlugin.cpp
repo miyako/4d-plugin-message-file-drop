@@ -942,6 +942,7 @@ private:
 	UINT m_cfFormatRPMessages;
 	UINT m_cfFormatRPLatestMessages;
 	UINT m_cfFormatFileContents;
+	UINT m_cfFormatWebCustomData;
 		
 	bool isFileDrop(IDataObject *pDataObj, FORMATETC *formatetc) {
 			
@@ -999,6 +1000,22 @@ private:
 		return false;
 	}
 	
+	bool isNewOutlookDrop(IDataObject* pDataObj, FORMATETC* formatetc) {
+
+		formatetc->cfFormat = CF_HDROP;
+		formatetc->ptd = NULL;
+		formatetc->dwAspect = DVASPECT_CONTENT;
+		formatetc->lindex = -1;
+		formatetc->tymed = TYMED_HGLOBAL;
+		formatetc->cfFormat = m_cfFormatWebCustomData;
+
+		if (S_OK == pDataObj->QueryGetData(formatetc))
+			return true;
+
+		return false;
+	}
+
+
 	public:
 	
 		MyDropTarget::MyDropTarget() : m_cRefCount(1), m_hWnd(NULL) {
@@ -1008,6 +1025,7 @@ private:
 			m_cfFormatRPMessages = RegisterClipboardFormat(L"RenPrivateMessages");
 			m_cfFormatRPLatestMessages = RegisterClipboardFormat(L"RenPrivateLatestMessages");
 			m_cfFormatFileContents = RegisterClipboardFormat(CFSTR_FILECONTENTS);
+			m_cfFormatWebCustomData = RegisterClipboardFormat(L"Chromium Web Custom MIME Data Format");
 
 		}
 	
@@ -1054,6 +1072,12 @@ private:
 		}
 
 		if (this->isOutlookDrop(pDataObj))
+		{
+			//*pdwEffect = DROPEFFECT_COPY;
+			return S_OK;
+		}
+
+		if (this->isNewOutlookDrop(pDataObj, &formatetc))
 		{
 			//*pdwEffect = DROPEFFECT_COPY;
 			return S_OK;
@@ -1230,6 +1254,26 @@ private:
 				}
 				return S_OK;
 			}
+		}
+
+		if ((!didReceiveItem) && (this->isNewOutlookDrop(pDataObj, &formatetc)))
+		{
+			if (S_OK == pDataObj->QueryGetData(&formatetc))
+			{
+				STGMEDIUM stm = {};
+				if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm)))
+				{
+					uint32_t size;
+					void *ptr = static_cast<void*>(GlobalLock(stm.hGlobal));
+
+					if (ptr != NULL)
+					{
+						memcpy(&size, ptr, sizeof(uint32_t));
+					}
+					GlobalUnlock(stm.hGlobal);
+				}
+			}
+
 		}
 
 		if (didReceiveItem)
