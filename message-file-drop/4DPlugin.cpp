@@ -1207,8 +1207,6 @@ private:
 		
 		if ((!didReceiveItem) && (this->isFileDrop(pDataObj, &formatetc)))
 		{
-			bool didReceiveItem = false;
-
 			if (S_OK == pDataObj->QueryGetData(&formatetc))
 			{
 				STGMEDIUM stm = {};
@@ -1243,17 +1241,6 @@ private:
 					GlobalUnlock(stm.hGlobal);
 				}
 			}
-		
-			if (didReceiveItem)
-			{
-				if (1)
-				{
-					std::lock_guard<std::mutex> lock(globalMutex4);
-
-					MFD::PROCESS_SHOULD_RESUME = true;
-				}
-				return S_OK;
-			}
 		}
 
 		if ((!didReceiveItem) && (this->isNewOutlookDrop(pDataObj, &formatetc)))
@@ -1266,42 +1253,78 @@ private:
                     uint32_t readBytes = 0;
                     uint32_t bufferSize = 0;
                     
-					void *ptr = static_cast<void*>(GlobalLock(stm.hGlobal));
+					unsigned char *ptr = static_cast<unsigned char*>(GlobalLock(stm.hGlobal));
 
 					if (ptr != NULL)
                     {
                         uint32_t size = 0;
                         bufferSize = sizeof(uint32_t);
 						memcpy(&size, ptr, bufferSize);
-                        readBytes += bufferSize);
+						size += sizeof(uint32_t);
+                        readBytes += bufferSize;
                         ptr += bufferSize;
                         
-                        for (uint32_t i = 0; i < size; ++i) {
-                            
-                            if(readBytes + bufferSize > size) {
-                                //bust
-                            }else
-                            {
-                                int len = 0;
-                                bufferSize = sizeof(int);
-                                memcpy(&len, ptr, bufferSize);
-                                readBytes += bufferSize);
-                                ptr += bufferSize;
-                                
-                                bufferSize = sizeof(PA_Unichar) * len;
-                                
-                                if(readBytes + bufferSize > size) {
-                                    //bust
-                                }else{
-                                    std::vector<unsigned char>buf(bufferSize);
-                                    memcpy(&buf[0], ptr, bufferSize);
-                                    readBytes += bufferSize;
-                                    ptr += bufferSize;
-                                    
-                                    CUTF16String str(&buf[0], len);
-                                }
-                            }
-                        }
+						uint32_t count = 0;//not used
+						bufferSize = sizeof(uint32_t);
+						memcpy(&count, ptr, bufferSize);//count of kvp; not used
+						readBytes += bufferSize;
+						ptr += bufferSize;
+						bool isValue = false;
+						CUTF16String key;
+
+						do
+						{
+							uint32_t len = 0;
+							bufferSize = sizeof(uint32_t);
+							memcpy(&len, ptr, bufferSize);
+							readBytes += bufferSize;
+							ptr += bufferSize;
+
+							bufferSize = sizeof(PA_Unichar) * len;
+
+							if (readBytes + bufferSize > size) {
+								//bust
+							}
+							else {
+								std::vector<unsigned char>buf(bufferSize);
+								memcpy(&buf[0], ptr, bufferSize);
+								readBytes += bufferSize;
+								ptr += bufferSize;
+								if (readBytes % sizeof(uint32_t) != 0) {
+									readBytes += sizeof(PA_Unichar);
+									ptr += sizeof(PA_Unichar);
+								}
+								
+								if (!isValue) {
+									key = CUTF16String((const PA_Unichar*)& buf[0], len);
+									isValue = true;
+								}
+								else {
+									CUTF16String value((const PA_Unichar*)&buf[0], len);
+									if ((key == CUTF16String((const PA_Unichar*)L"maillistrow"))
+									|| (key == CUTF16String((const PA_Unichar*)L"multimaillistconversationrows"))) {
+									
+										if (1)
+										{
+											std::lock_guard<std::mutex> lock(globalMutex);
+
+											MFD::CALLBACK_HTMLBODY.push_back(value);
+
+											CUTF16String msgPath, mhtPath;
+											MFD::CALLBACK_MHT.push_back(mhtPath);//empty
+											MFD::CALLBACK_MSG.push_back(msgPath);//empty
+
+											didReceiveItem = true;
+										}
+
+									}
+									//multimaillistconversationrows
+									isValue = false;
+								}
+							}
+
+						} while (readBytes + sizeof(uint32_t) <= size);
+
 					}
 					GlobalUnlock(stm.hGlobal);
 				}
