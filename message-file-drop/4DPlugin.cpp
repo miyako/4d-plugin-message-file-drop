@@ -1263,12 +1263,45 @@ private:
 				STGMEDIUM stm = {};
 				if (SUCCEEDED(pDataObj->GetData(&formatetc, &stm)))
 				{
-					uint32_t size;
+                    uint32_t readBytes = 0;
+                    uint32_t bufferSize = 0;
+                    
 					void *ptr = static_cast<void*>(GlobalLock(stm.hGlobal));
 
 					if (ptr != NULL)
-					{
-						memcpy(&size, ptr, sizeof(uint32_t));
+                    {
+                        uint32_t size = 0;
+                        bufferSize = sizeof(uint32_t);
+						memcpy(&size, ptr, bufferSize);
+                        readBytes += bufferSize);
+                        ptr += bufferSize;
+                        
+                        for (uint32_t i = 0; i < size; ++i) {
+                            
+                            if(readBytes + bufferSize > size) {
+                                //bust
+                            }else
+                            {
+                                int len = 0;
+                                bufferSize = sizeof(int);
+                                memcpy(&len, ptr, bufferSize);
+                                readBytes += bufferSize);
+                                ptr += bufferSize;
+                                
+                                bufferSize = sizeof(PA_Unichar) * len;
+                                
+                                if(readBytes + bufferSize > size) {
+                                    //bust
+                                }else{
+                                    std::vector<unsigned char>buf(bufferSize);
+                                    memcpy(&buf[0], ptr, bufferSize);
+                                    readBytes += bufferSize;
+                                    ptr += bufferSize;
+                                    
+                                    CUTF16String str(&buf[0], len);
+                                }
+                            }
+                        }
 					}
 					GlobalUnlock(stm.hGlobal);
 				}
