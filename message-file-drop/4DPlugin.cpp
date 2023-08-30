@@ -1153,7 +1153,7 @@ private:
 									formatetc2.cfFormat = m_cfFormatFileContents;
 									formatetc2.ptd = NULL;
 									formatetc2.dwAspect = DVASPECT_CONTENT;
-									formatetc2.lindex = -1;// i;
+									formatetc2.lindex =  i;
 									formatetc2.tymed = TYMED_ISTREAM;
 
 									STGMEDIUM stm2 = {};
