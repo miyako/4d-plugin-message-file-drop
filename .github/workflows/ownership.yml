@@ -1,0 +1,19 @@
+name: ownership
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sanitizers:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Ownership harness (ASan/UBSan, synthetic 4D boundary)
+        run: tests/ownership/run.sh . fixed

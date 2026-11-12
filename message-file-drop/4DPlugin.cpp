@@ -872,10 +872,11 @@ void listenerLoopExecuteMethod()
 	if(methodId)
 	{
 		PA_Variable	params[4];
-		params[0] = PA_CreateVariable(eVK_Unistring);
-		params[1] = PA_CreateVariable(eVK_Unistring);
-		params[2] = PA_CreateVariable(eVK_Unistring);
-		params[3] = PA_CreateVariable(eVK_Unistring);
+		/* PA_SetStringVariable is shallow: eVK_Unistring would leak an empty string */
+		params[0] = PA_CreateVariable(eVK_Undefined);
+		params[1] = PA_CreateVariable(eVK_Undefined);
+		params[2] = PA_CreateVariable(eVK_Undefined);
+		params[3] = PA_CreateVariable(eVK_Undefined);
 
 		PA_Unistring body = PA_CreateUnistring((PA_Unichar *)htmlBody.c_str());
 		PA_Unistring mht = PA_CreateUnistring((PA_Unichar *)mhtPath.c_str());
@@ -887,19 +888,26 @@ void listenerLoopExecuteMethod()
 		PA_SetStringVariable(&params[2], &msg);
 		PA_SetStringVariable(&params[3], &context);
 
-		PA_ExecuteMethodByID(methodId, params, 4);
+		PA_Variable result = PA_ExecuteMethodByID(methodId, params, 4);
+		/* PA_ClearVariable resets the last error: capture it first */
+		bool hasResult = (PA_GetLastError() == eER_NoErr);
 
 		PA_ClearVariable(&params[0]);
 		PA_ClearVariable(&params[1]);
 		PA_ClearVariable(&params[2]);
+		PA_ClearVariable(&params[3]);
+
+		if(hasResult)
+			PA_ClearVariable(&result);
 
 	}else
 	{
 		PA_Variable	params[5];
-		params[1] = PA_CreateVariable(eVK_Unistring);
-		params[2] = PA_CreateVariable(eVK_Unistring);
-		params[3] = PA_CreateVariable(eVK_Unistring);
-		params[4] = PA_CreateVariable(eVK_Unistring);
+		/* PA_SetStringVariable is shallow: eVK_Unistring would leak an empty string */
+		params[1] = PA_CreateVariable(eVK_Undefined);
+		params[2] = PA_CreateVariable(eVK_Undefined);
+		params[3] = PA_CreateVariable(eVK_Undefined);
+		params[4] = PA_CreateVariable(eVK_Undefined);
 
 		PA_Unistring body = PA_CreateUnistring((PA_Unichar *)htmlBody.c_str());
 		PA_Unistring mht = PA_CreateUnistring((PA_Unichar *)mhtPath.c_str());
@@ -911,7 +919,7 @@ void listenerLoopExecuteMethod()
 		PA_SetStringVariable(&params[3], &msg);
 		PA_SetStringVariable(&params[4], &context);
 
-		params[0] = PA_CreateVariable(eVK_Unistring);
+		params[0] = PA_CreateVariable(eVK_Undefined);
 		PA_Unistring method = PA_CreateUnistring((PA_Unichar *)MFD::LISTENER_METHOD.getUTF16StringPtr());
 		PA_SetStringVariable(&params[0], &method);
 
