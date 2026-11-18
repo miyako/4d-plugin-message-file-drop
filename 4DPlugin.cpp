@@ -155,6 +155,7 @@ IDispatch *get_outlook_application() {
             if (FAILED(hr)) {
                 pDispatch = NULL;
             }
+            pUnknown->Release();
         }
     }
 
@@ -553,10 +554,13 @@ HRESULT outlook_export_selected_messages(){
 									}
                                 }
                             }
+                            if (pItem) pItem->Release();
                         }
                     }
+                    if (pSelection) pSelection->Release();
                 }
             }
+            if (pExplorer) pExplorer->Release();
 
             pDispatch->Release();
         }
@@ -1195,15 +1199,18 @@ private:
 												didReceiveItem = true;
 											}
 										}
+										ReleaseStgMedium(&stm2);
 									}
 
 									pFileDescriptor++;
 								}
 
 							}
+							ReleaseStgMedium(&stm0);
 						}
 					}
 					GlobalUnlock(stm.hGlobal);
+					ReleaseStgMedium(&stm);
 				}
 			}
 		}
@@ -1247,6 +1254,7 @@ private:
 						}
 					}
 					GlobalUnlock(stm.hGlobal);
+					ReleaseStgMedium(&stm);
 				}
 			}
 		}
@@ -1292,6 +1300,7 @@ private:
 
 							if (readBytes + bufferSize > size) {
 								//bust
+								break;
 							}
 							else {
 								std::vector<unsigned char>buf(bufferSize);
@@ -1335,6 +1344,7 @@ private:
 
 					}
 					GlobalUnlock(stm.hGlobal);
+					ReleaseStgMedium(&stm);
 				}
 			}
 
