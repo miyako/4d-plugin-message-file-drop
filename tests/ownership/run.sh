@@ -14,7 +14,14 @@
 # controls) must pass; anything else is a harness or model error.
 set -euo pipefail
 
-SRC=$(cd "$1/message-file-drop" && pwd)
+# The plugin sources are at the repo root in the current layout; a git archive
+# of an older commit keeps them under message-file-drop/. Support both so the
+# same harness can run against a baseline snapshot and the fixed tree.
+if [ -d "$1/message-file-drop" ]; then
+    SRC=$(cd "$1/message-file-drop" && pwd)
+else
+    SRC=$(cd "$1" && pwd)
+fi
 MODE=$2
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$(mktemp -d)

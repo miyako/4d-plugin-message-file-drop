@@ -1,3 +1,10 @@
-message-file-drop/build/*
-message-file-drop/Objs/*
-message-file-drop/.vs/*
+.DS_Store
+build/
+Objs/
+.vs/
+Message file drop.4dbase/Logs/
+Message file drop.4dbase/userPreferences.*/
+/Message file drop.dmg
+/Message file drop.zip
+Message file drop.4dbase/Plugins/Message file drop.bundle/Contents/MacOS/Message file drop
+Message file drop.4dbase/Plugins/Message file drop.bundle/Contents/_CodeSignature/
