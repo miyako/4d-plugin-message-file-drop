@@ -11,6 +11,10 @@
 #include "4DPluginAPI.h"
 #include "4DPlugin.h"
 
+#if VERSIONWIN
+#include <shellapi.h> /* HDROP, DragQueryFile, CF_HDROP */
+#endif
+
 std::mutex globalMutex; /* WATCH_PATHS,CALLBACK_EVENT_PATHS */
 std::mutex globalMutex1;/* for METHOD_PROCESS_ID */
 std::mutex globalMutex2;/* for LISTENER_METHOD,WATCH_CONTEXT */
